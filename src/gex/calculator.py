@@ -31,29 +31,48 @@ def calculate_gex_profile(
     spot: float,
 ) -> dict[float, float]:
     """
-    Calculate Gamma Exposure per strike.
+    Calculate Gamma Exposure per strike using SpotGamma standard formula.
 
-    GEX_strike = gamma × OI × 100 × spot
+    GEX_strike = gamma × OI × 100 × spot² × 0.01
 
-    Calls: MM typically short → dealer is long gamma → positive GEX
-    Puts: MM typically short → put gamma hedge reverses → negative GEX
+    This represents the dollar delta change per 1% move in the underlying.
+    SpotGamma convention: calls positive, puts negative (assumes dealer short).
+
+    Limitation: assumes ALL open interest is dealer-short. Breaks when
+    institutions are net sellers (e.g., covered call overwriting) or at
+    strikes with heavy inter-dealer flow. Without CBOE-level trade
+    direction data, this is the best available approximation.
+
+    For 0DTE contracts: EOD OI does not capture same-day-open contracts.
+    Use intraday volume as supplemental proxy (see volume_proxy_gex).
+
+    Reference: Barbon & Buraschi "Gamma Fragility" (2021, SSRN 3725454)
 
     Args:
         options_df: DataFrame with columns [strike, gamma, open_interest, right]
+                    Optionally includes 'volume' for intraday proxy.
         spot: current underlying price
 
     Returns:
-        dict mapping strike -> net GEX value
+        dict mapping strike -> net GEX value (dollars of delta per 1% move)
     """
     gex = {}
 
     for _, row in options_df.iterrows():
         strike = row["strike"]
         gamma = row["gamma"]
-        oi = row["open_interest"]
-        right = row["right"]  # "C" or "P"
+        right = row["right"]
 
-        exposure = gamma * oi * 100 * spot
+        # Use OI if available, fall back to volume as proxy for 0DTE
+        oi = row.get("open_interest", 0) or 0
+        if oi == 0:
+            oi = row.get("volume", 0) or 0
+
+        if oi == 0 or gamma == 0:
+            continue
+
+        # SpotGamma standard: gamma × OI × 100 × S² × 0.01
+        exposure = gamma * oi * 100 * spot * spot * 0.01
 
         if right == "C":
             gex[strike] = gex.get(strike, 0.0) + exposure
