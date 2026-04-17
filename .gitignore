@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# Environment
+.env
+.env.*
+venv/
+.venv/
+
+# Data (large files, don't commit)
+data/raw/
+data/cache/
+*.parquet
+*.csv
+*.h5
+!data/sample/
+
+# Credentials
+*.pem
+*secret*
+*credential*
+*token*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Results (regenerable)
+results/
+backtest_output/

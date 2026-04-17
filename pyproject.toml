@@ -1,0 +1,20 @@
+[project]
+name = "0dte-strategy"
+version = "0.1.0"
+description = "0DTE SPX/SPY options strategy — GEX/Vanna-driven intraday trading"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy",
+    "pandas",
+    "scipy",
+    "ib_insync",
+    "py_vollib",
+    "plotly",
+    "python-dotenv",
+    "requests",
+    "httpx",
+]
+
+[project.optional-dependencies]
+theta = ["thetadata"]
+dev = ["pytest", "mypy", "ruff"]
