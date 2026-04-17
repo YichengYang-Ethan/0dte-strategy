@@ -13,12 +13,19 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import asyncio
 import logging
 import os
 import signal
 import sys
 import time
 from datetime import datetime
+
+# Python 3.14+: must create event loop before importing ib_insync/eventkit
+try:
+    asyncio.get_event_loop()
+except RuntimeError:
+    asyncio.set_event_loop(asyncio.new_event_loop())
 
 from dotenv import load_dotenv
 from ib_insync import IB, Stock
