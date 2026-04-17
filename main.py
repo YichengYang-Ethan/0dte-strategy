@@ -75,7 +75,18 @@ def main():
     client_id = int(os.getenv("IB_CLIENT_ID", "10"))
 
     logger.info(f"Connecting to IB Gateway {host}:{port} (client {client_id})")
+    import asyncio
+    try:
+        asyncio.get_event_loop()
+    except RuntimeError:
+        asyncio.set_event_loop(asyncio.new_event_loop())
     ib.connect(host, port, clientId=client_id)
+
+    # Paper account: use delayed data (free). Live account: use real-time (1).
+    if paper:
+        ib.reqMarketDataType(3)  # 3 = delayed
+    else:
+        ib.reqMarketDataType(1)  # 1 = real-time (requires subscription)
 
     stock = Stock(args.underlying, "SMART", "USD")
     ib.qualifyContracts(stock)
