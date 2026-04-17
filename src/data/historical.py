@@ -97,7 +97,8 @@ def download_day(
                 oi_df = client.option_history_open_interest(
                     symbol=symbol,
                     expiration=exp,
-                    date_range=(trade_date, trade_date),
+                    start_date=trade_date,
+                    end_date=trade_date,
                     right=right_str,
                 )
 

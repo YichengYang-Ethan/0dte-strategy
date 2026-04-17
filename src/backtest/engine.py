@@ -134,19 +134,35 @@ class BacktestEngine:
         if day_df.empty:
             return
 
-        # Get unique timestamps (bars)
-        timestamps = sorted(day_df["timestamp"].unique())
+        # For daily OI data (single timestamp per day), simulate intraday bars
+        # by creating synthetic timestamps at key trading hours
+        has_intraday = False
+        if "timestamp" in day_df.columns:
+            unique_ts = day_df["timestamp"].unique()
+            if len(unique_ts) > 1:
+                has_intraday = True
+
+        if not has_intraday:
+            # Single snapshot per day: simulate bars at 10:00, 11:00, 12:00, 13:00, 14:00
+            synthetic_times = [
+                datetime(d.year, d.month, d.day, h, 0)
+                for h in [10, 11, 12, 13, 14]
+            ]
+            timestamps_dt = synthetic_times
+        else:
+            timestamps = sorted(day_df["timestamp"].unique())
+            timestamps_dt = []
+            for ts in timestamps:
+                try:
+                    timestamps_dt.append(pd.Timestamp(ts).to_pydatetime())
+                except Exception:
+                    timestamps_dt.append(datetime.fromisoformat(str(ts)))
 
         position = None
 
-        for ts in timestamps:
-            bar = day_df[day_df["timestamp"] == ts].copy()
-            now = pd.Timestamp(ts)
-
-            if hasattr(now, 'to_pydatetime'):
-                now_dt = now.to_pydatetime()
-            else:
-                now_dt = datetime.fromisoformat(str(now))
+        for now_dt in timestamps_dt:
+            # Use full day data for each bar (OI doesn't change intraday)
+            bar = day_df.copy()
 
             # Get spot from ATM option (average of ATM call bid+ask)
             spot = self._estimate_spot(bar)
