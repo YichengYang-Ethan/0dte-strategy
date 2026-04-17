@@ -203,22 +203,22 @@ class BacktestEngine:
             )
 
     def _estimate_spot(self, bar: pd.DataFrame) -> float:
-        """Estimate underlying spot from option prices."""
-        # Use midpoint of ATM call and put
-        calls = bar[bar["right"] == "C"]
-        if calls.empty:
+        """Estimate underlying spot from option OI distribution.
+
+        ATM strike = strike with highest OI (both calls + puts combined).
+        This is more reliable than volume (which may be 0 in historical data)
+        or mid price (which depends on BSM assumptions).
+        """
+        if bar.empty:
             return 0
 
-        # ATM = strike closest to average of all mid prices weighted by volume
-        calls = calls.copy()
-        calls["mid"] = (calls["bid"] + calls["ask"]) / 2
-        # Find strike with highest volume (likely ATM)
-        if "volume" in calls.columns and calls["volume"].sum() > 0:
-            atm_idx = calls["volume"].idxmax()
-        else:
-            atm_idx = calls["mid"].idxmax()
+        # Combine call + put OI per strike, ATM has highest total OI
+        oi_by_strike = bar.groupby("strike")["open_interest"].sum()
+        if oi_by_strike.empty or oi_by_strike.sum() == 0:
+            # Fallback: median strike
+            return float(bar["strike"].median())
 
-        return float(calls.loc[atm_idx, "strike"])
+        return float(oi_by_strike.idxmax())
 
     def _select_contract(
         self,
