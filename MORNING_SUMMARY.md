@@ -64,6 +64,30 @@ possibly ML classifier. Est. 1-2 weeks of rewrite.
 **My recommendation**: Option A for real capital. Option B with paper trade
 for educational value. Do NOT deploy real capital on v5.
 
+## UPDATE: v11 Regime-Switch Combo (post-wake-up morning test)
+
+Found one variant that passes ALL 4 OOS buckets (first time):
+
+```
+Rule: trailing 60d IV median classifier
+  low_vol  → sell ATM 1DTE straddle
+  high_vol → v5 (buy 0.70Δ call if NEG_GAMMA + pos<0.15)
+
+Results (824 days, 1 contract):
+              N     PF    Sharpe
+  Y2023      127   1.07   0.40
+  EXT_OOS    219   1.09   0.37
+  ORIG_OOS    82   1.98   4.28
+  ORIG_IS     71   1.33   1.65
+  ALL        499   1.22   0.98
+```
+
+Still weak (Y2023, EXT_OOS barely positive) but the MOST defensible variant
+found overnight. Infrastructure: `scripts/test_regime_switch.py`.
+
+Updated recommendation: **Option B (paper trade)** now uses v11 instead of v5.
+Tell me if you want me to wire v11 into the engine as a new signal_mode.
+
 ## Git state
 
 ```
