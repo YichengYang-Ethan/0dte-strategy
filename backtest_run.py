@@ -26,6 +26,8 @@ def main():
     parser.add_argument("--data-dir", required=True, help="Path to historical data directory")
     parser.add_argument("--sweep", action="store_true", help="Run parameter sweep")
     parser.add_argument("--output", default="backtest_results.csv", help="Output CSV path")
+    parser.add_argument("--mode", default="swing_1dte", choices=["swing_1dte", "intraday"],
+                        help="Backtest mode (default: swing_1dte for EOD-only data)")
     args = parser.parse_args()
 
     if args.sweep:
@@ -35,7 +37,7 @@ def main():
     else:
         config = BacktestConfig()
         engine = BacktestEngine(config)
-        trades_df = engine.run(args.data_dir)
+        trades_df = engine.run(args.data_dir, mode=args.mode)
 
         if not trades_df.empty:
             report = generate_report(trades_df)

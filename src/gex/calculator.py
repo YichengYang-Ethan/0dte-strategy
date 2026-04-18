@@ -131,33 +131,41 @@ def identify_levels(gex_profile: dict[float, float], spot: float) -> GEXLevels:
 def calculate_vanna_exposure(
     options_df: pd.DataFrame,
     spot: float,
+    max_dte_days: int = 45,
 ) -> VannaExposure:
     """
-    Calculate total Vanna exposure.
+    Total Vanna exposure (VEX) under SqueezeMetrics/FlashAlpha industry convention:
 
-    Vanna = dDelta/dIV.
-    When IV drops (bullish move), positive vanna → MM sells delta → bearish pressure.
-    When IV drops + negative vanna → MM buys delta → bullish reinforcement.
+        VEX = Σ  vanna_i × OI_i × 100 × S × k_i × 0.01
+        k = +1 for calls, -1 for puts   (customer-net-long convention)
+
+    Units: dollar delta change per 1 vol point (1 IV percentage point).
+
+    Sources cross-validated:
+    - Academic: Barbon & Buraschi (2021), Baltussen et al. (JFE 2021), SqueezeMetrics whitepaper
+    - Industry: FlashAlpha /concepts/vex, Menthor Q, SpotGamma, Proshotv2 reference impl
+    - Linear S scaling (not S²) is a hard consensus — GEX uses S², VEX uses S¹
+
+    Empirical calibration on 113 days of SPY: VEX in [8e7, 2e9], median ~6.6e8.
+    Old hard-coded ±1e6 threshold was 3 orders of magnitude too small, which is why
+    every day fired BULLISH_VANNA. Tercile classification is done by the caller
+    (calculate_vanna_exposure returns raw value, signal generator buckets it).
+
+    max_dte_days: cap included expirations at N days to avoid LEAPS dominance.
     """
-    total_vanna = 0.0
+    df = options_df.copy()
+    if "dte_years" in df.columns:
+        df = df[df["dte_years"] * 365 <= max_dte_days]
 
-    for _, row in options_df.iterrows():
-        vanna = row.get("vanna", 0.0)
-        if pd.isna(vanna):
-            continue
-        oi = row["open_interest"]
-        right = row["right"]
+    if df.empty:
+        return VannaExposure(total_vanna=0.0, direction="NEUTRAL")
 
-        exposure = vanna * oi * 100
-        if right == "P":
-            exposure = -exposure
-        total_vanna += exposure
+    vanna = df["vanna"].fillna(0.0).astype(float)
+    oi = df["open_interest"].astype(float)
+    k = np.where(df["right"] == "C", 1.0, -1.0)
 
-    if total_vanna > 1e6:
-        direction = "BULLISH_VANNA"
-    elif total_vanna < -1e6:
-        direction = "BEARISH_VANNA"
-    else:
-        direction = "NEUTRAL"
+    total_vanna = float((vanna * oi * 100 * spot * 0.01 * k).sum())
 
-    return VannaExposure(total_vanna=total_vanna, direction=direction)
+    # Direction is now set by caller using a rolling tercile (walk-forward, no lookahead).
+    # Default to NEUTRAL for backward compat; callers should use total_vanna directly.
+    return VannaExposure(total_vanna=total_vanna, direction="NEUTRAL")

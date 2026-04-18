@@ -55,12 +55,59 @@ def compute_charm(
     return term1 + term2
 
 
-def enrich_greeks(options_df: pd.DataFrame, spot: float, r: float = 0.05) -> pd.DataFrame:
+def compute_delta(S, K, T, r, sigma, is_call, q=0.0):
+    if T <= 1e-8 or sigma <= 1e-8 or S <= 0 or K <= 0:
+        return 0.0
+    d1 = bsm_d1(S, K, T, r, sigma, q)
+    if is_call:
+        return math.exp(-q * T) * norm.cdf(d1)
+    return -math.exp(-q * T) * norm.cdf(-d1)
+
+
+def compute_gamma(S, K, T, r, sigma, q=0.0):
+    if T <= 1e-8 or sigma <= 1e-8 or S <= 0 or K <= 0:
+        return 0.0
+    d1 = bsm_d1(S, K, T, r, sigma, q)
+    return math.exp(-q * T) * norm.pdf(d1) / (S * sigma * math.sqrt(T))
+
+
+def compute_vega(S, K, T, r, sigma, q=0.0):
+    if T <= 1e-8 or sigma <= 1e-8 or S <= 0 or K <= 0:
+        return 0.0
+    d1 = bsm_d1(S, K, T, r, sigma, q)
+    return S * math.exp(-q * T) * norm.pdf(d1) * math.sqrt(T) / 100  # per 1 vol point
+
+
+def compute_theta(S, K, T, r, sigma, is_call, q=0.0):
+    if T <= 1e-8 or sigma <= 1e-8 or S <= 0 or K <= 0:
+        return 0.0
+    d1 = bsm_d1(S, K, T, r, sigma, q)
+    d2 = d1 - sigma * math.sqrt(T)
+    term1 = -S * math.exp(-q * T) * norm.pdf(d1) * sigma / (2 * math.sqrt(T))
+    if is_call:
+        term2 = -r * K * math.exp(-r * T) * norm.cdf(d2)
+        term3 = q * S * math.exp(-q * T) * norm.cdf(d1)
+    else:
+        term2 = r * K * math.exp(-r * T) * norm.cdf(-d2)
+        term3 = -q * S * math.exp(-q * T) * norm.cdf(-d1)
+    return (term1 + term2 + term3) / 365  # per calendar day
+
+
+def enrich_greeks(
+    options_df: pd.DataFrame,
+    spot: float,
+    r: float = 0.05,
+    as_of=None,
+) -> pd.DataFrame:
     """
-    Add Vanna and Charm columns to options DataFrame.
+    Add Vanna/Charm and (re)compute Delta/Gamma/Vega/Theta from the `iv` column.
 
     Expects columns: strike, right, iv, expiry (or dte_years).
-    Modifies DataFrame in place and returns it.
+    All Greeks are recomputed from real IV; any pre-existing values are overwritten.
+
+    Args:
+        as_of: datetime/date to compute DTE against. Defaults to datetime.now()
+               (live mode); pass the trade date for backtest mode.
     """
     df = options_df.copy()
 
@@ -68,8 +115,13 @@ def enrich_greeks(options_df: pd.DataFrame, spot: float, r: float = 0.05) -> pd.
         if "dte_minutes" in df.columns:
             df["dte_years"] = df["dte_minutes"] / (252 * 6.5 * 60)
         elif "expiry" in df.columns:
-            from datetime import datetime
-            now = datetime.now()
+            from datetime import date as _date, datetime
+            if as_of is None:
+                now = datetime.now()
+            elif isinstance(as_of, _date) and not isinstance(as_of, datetime):
+                now = datetime.combine(as_of, datetime.min.time()).replace(hour=9, minute=30)
+            else:
+                now = as_of
             def _calc_dte(exp_str):
                 try:
                     exp = datetime.strptime(str(exp_str)[:8], "%Y%m%d").replace(hour=16)
@@ -79,23 +131,29 @@ def enrich_greeks(options_df: pd.DataFrame, spot: float, r: float = 0.05) -> pd.
                     return 1e-8
             df["dte_years"] = df["expiry"].apply(_calc_dte)
         else:
-            df["dte_years"] = 1 / 252  # assume 1 trading day
+            df["dte_years"] = 1 / 252
 
-    vannas = []
-    charms = []
+    deltas, gammas, vegas, thetas, vannas, charms = [], [], [], [], [], []
     for _, row in df.iterrows():
         iv = row.get("iv", 0.0)
         if pd.isna(iv) or iv <= 0:
-            vannas.append(0.0)
-            charms.append(0.0)
+            deltas.append(0.0); gammas.append(0.0); vegas.append(0.0)
+            thetas.append(0.0); vannas.append(0.0); charms.append(0.0)
             continue
         T = row["dte_years"]
         K = row["strike"]
-        v = compute_vanna(spot, K, T, r, iv)
-        c = compute_charm(spot, K, T, r, iv)
-        vannas.append(v)
-        charms.append(c)
+        is_call = row["right"] == "C"
+        deltas.append(compute_delta(spot, K, T, r, iv, is_call))
+        gammas.append(compute_gamma(spot, K, T, r, iv))
+        vegas.append(compute_vega(spot, K, T, r, iv))
+        thetas.append(compute_theta(spot, K, T, r, iv, is_call))
+        vannas.append(compute_vanna(spot, K, T, r, iv))
+        charms.append(compute_charm(spot, K, T, r, iv))
 
+    df["delta"] = deltas
+    df["gamma"] = gammas
+    df["vega"] = vegas
+    df["theta"] = thetas
     df["vanna"] = vannas
     df["charm"] = charms
     return df

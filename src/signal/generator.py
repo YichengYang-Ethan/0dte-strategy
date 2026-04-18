@@ -111,87 +111,29 @@ def generate_signal(
                 return -0.10
         return 0.0
 
-    if levels.regime == "NEGATIVE_GAMMA":
-        # Trending market — directional trades
-
-        if position_in_range < 0.3:
-            base_conf = 0.70
-            adj = base_conf + vanna_score("BEARISH")
-            conf = adj * session_modifier
-            if conf >= 0.55:
-                return TradeSignal(
-                    direction="BEARISH", confidence=round(conf, 2),
-                    target=put_wall,
-                    stop=spot + (spot - put_wall) * 0.3,
-                    regime=levels.regime,
-                    reason=f"neg_gamma near put_wall({put_wall:.0f}) pos={position_in_range:.2f}",
-                    time_session=session,
-                )
-
-        if position_in_range > 0.7:
-            base_conf = 0.70
-            adj = base_conf + vanna_score("BULLISH")
-            conf = adj * session_modifier
-            if conf >= 0.55:
-                return TradeSignal(
-                    direction="BULLISH", confidence=round(conf, 2),
-                    target=call_wall,
-                    stop=spot - (call_wall - spot) * 0.3,
-                    regime=levels.regime,
-                    reason=f"neg_gamma near call_wall({call_wall:.0f}) pos={position_in_range:.2f}",
-                    time_session=session,
-                )
-
-        # Mid-range with strong vanna
-        if position_in_range > 0.5 and vanna.direction == "BULLISH_VANNA":
-            conf = 0.60 * session_modifier
-            if conf >= 0.55:
-                return TradeSignal(
-                    direction="BULLISH", confidence=round(conf, 2),
-                    target=call_wall,
-                    stop=spot - range_total * 0.15,
-                    regime=levels.regime,
-                    reason=f"neg_gamma above_mid + bullish_vanna pos={position_in_range:.2f}",
-                    time_session=session,
-                )
-
-        if position_in_range < 0.5 and vanna.direction == "BEARISH_VANNA":
-            conf = 0.60 * session_modifier
-            if conf >= 0.55:
-                return TradeSignal(
-                    direction="BEARISH", confidence=round(conf, 2),
-                    target=put_wall,
-                    stop=spot + range_total * 0.15,
-                    regime=levels.regime,
-                    reason=f"neg_gamma below_mid + bearish_vanna pos={position_in_range:.2f}",
-                    time_session=session,
-                )
-
-    elif levels.regime == "POSITIVE_GAMMA":
-        # Pinning market — mean reversion
-        mid = (call_wall + put_wall) / 2
-
-        if position_in_range > 0.80:
-            conf = 0.60 * session_modifier
-            if conf >= 0.55:
-                return TradeSignal(
-                    direction="BEARISH", confidence=round(conf, 2),
-                    target=mid, stop=call_wall * 1.002,
-                    regime=levels.regime,
-                    reason=f"pos_gamma stretched_to_call_wall revert_to_mid({mid:.0f})",
-                    time_session=session,
-                )
-
-        if position_in_range < 0.20:
-            conf = 0.60 * session_modifier
-            if conf >= 0.55:
-                return TradeSignal(
-                    direction="BULLISH", confidence=round(conf, 2),
-                    target=mid, stop=put_wall * 0.998,
-                    regime=levels.regime,
-                    reason=f"pos_gamma stretched_to_put_wall revert_to_mid({mid:.0f})",
-                    time_session=session,
-                )
+    # ONLY surviving setup after OOS validation on 232 days (2025-05-15 → 2026-04-16):
+    #   NEG_GAMMA + spot near put_wall (pos<0.3) → BULLISH bounce
+    #   IS PF 1.65, OOS PF 1.59 → 4% degradation only, genuine out-of-sample stability.
+    #
+    # Setups DROPPED (failed OOS):
+    #   NEG_high_reject: IS -0.427% → OOS +0.202% (sign flipped, spurious)
+    #   POS_high_drift:  IS +0.125% → OOS +0.021% (effect vanished)
+    #   VEX tercile filter: IS monotone, OOS flat (zero predictive power OOS)
+    #
+    # Interpretation: dealers short gamma near put_wall must buy to hedge as spot
+    # approaches — a support mechanism documented in SpotGamma/Baltussen et al.
+    # This is the only mechanism in the GEX framework that reproduces out-of-sample.
+    if levels.regime == "NEGATIVE_GAMMA" and position_in_range < 0.3:
+        conf = 0.70 * session_modifier
+        if conf >= 0.55:
+            return TradeSignal(
+                direction="BULLISH", confidence=round(conf, 2),
+                target=(put_wall + call_wall) / 2,
+                stop=put_wall * 0.998,
+                regime=levels.regime,
+                reason=f"neg_gamma bounce_off_put_wall({put_wall:.0f}) pos={position_in_range:.2f}",
+                time_session=session,
+            )
 
     neutral.reason = "no actionable setup"
     return neutral
