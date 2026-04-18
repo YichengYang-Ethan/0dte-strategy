@@ -85,6 +85,11 @@ class BacktestConfig:
     # experimentation only.
     vex_filter: str = "none"
     vex_warmup_days: int = 60
+    # Weekend-gap filter: initially looked spectacular (N=13 PF 8.19 on 232 days,
+    # p=0.005) but FAILED extended OOS (N=21 PF 0.84 on 2024-01→2025-05). Kept as
+    # disabled research flag — do NOT enable for production. Textbook overfit from
+    # small-N multi-hypothesis testing.
+    weekend_gap_only: bool = False
 
 
 class BacktestEngine:
@@ -169,6 +174,13 @@ class BacktestEngine:
         if day_info["mode"] == "NO_TRADE":
             return
         risk_mult = day_info["risk_multiplier"]
+
+        # Experimental weekend-gap filter (disabled by default). Friday entry
+        # (weekday 4) with Monday expiry holds over a non-trading weekend —
+        # dealers cannot re-hedge accumulated short-gamma, producing a strong
+        # put-wall bounce on reopen. See engine config comment for stats.
+        if self.config.weekend_gap_only and d.weekday() != 4:
+            return
 
         bar = pd.read_parquet(signal_fpath)
         if bar.empty:

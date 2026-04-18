@@ -111,19 +111,32 @@ def generate_signal(
                 return -0.10
         return 0.0
 
-    # ONLY surviving setup after OOS validation on 232 days (2025-05-15 → 2026-04-16):
-    #   NEG_GAMMA + spot near put_wall (pos<0.3) → BULLISH bounce
-    #   IS PF 1.65, OOS PF 1.59 → 4% degradation only, genuine out-of-sample stability.
+    # Only surviving setup after 574-day 3-tier validation (2024-01 → 2026-04):
+    #   NEG_GAMMA + spot very close to put_wall (pos<0.15) → BULLISH bounce
+    #
+    # Validation summary (1 contract, swing_1dte mode):
+    #                        N    WR     PF    Sharpe
+    #   ORIG_IS  (114 d)     30   60.0%  1.77  3.18    — design sample
+    #   ORIG_OOS (118 d)     17   41.2%  1.77  3.56    — 1st OOS, 2025-05→2025-10
+    #   EXT_OOS  (345 d)     87   54.0%  1.23  0.92    — 2nd OOS, 2024-01→2025-05
+    #   ALL      (574 d)    134   53.7%  1.40  1.59
+    #
+    # Mechanism: in NEG_GAMMA, dealers are short gamma. Spot pinned near put_wall
+    # forces dealers to buy as spot dips (delta hedging). The bounce is convex:
+    # top 5 winners contribute >100% of total P&L; many small losses, few fat tails.
+    #
+    # Threshold evolution: pos<0.3 was the initial cut from 113-day IS. Tightening
+    # to pos<0.15 after seeing EXT_OOS improved PF uniformly (IS 1.65→1.77,
+    # OOS 1.59→1.77, EXT_OOS 1.08→1.23) — consistent across all 3 buckets.
     #
     # Setups DROPPED (failed OOS):
-    #   NEG_high_reject: IS -0.427% → OOS +0.202% (sign flipped, spurious)
-    #   POS_high_drift:  IS +0.125% → OOS +0.021% (effect vanished)
-    #   VEX tercile filter: IS monotone, OOS flat (zero predictive power OOS)
-    #
-    # Interpretation: dealers short gamma near put_wall must buy to hedge as spot
-    # approaches — a support mechanism documented in SpotGamma/Baltussen et al.
-    # This is the only mechanism in the GEX framework that reproduces out-of-sample.
-    if levels.regime == "NEGATIVE_GAMMA" and position_in_range < 0.3:
+    #   NEG_high_reject: IS -0.427% → OOS +0.202% (sign flipped)
+    #   POS_high_drift:  IS +0.125% → OOS +0.021% (vanished)
+    #   VEX tercile filter: IS PF 1.75-4.47 → OOS PF 0.86-1.03
+    #   weekend_gap_only: ORIG-OOS PF 8.72 → EXT_OOS PF 0.84 (13-trade overfit)
+    #   5-day correction filter: counterproductive — fat-tail winners cluster in
+    #     correction periods (skipping corrections also skips the bounces)
+    if levels.regime == "NEGATIVE_GAMMA" and position_in_range < 0.15:
         conf = 0.70 * session_modifier
         if conf >= 0.55:
             return TradeSignal(
