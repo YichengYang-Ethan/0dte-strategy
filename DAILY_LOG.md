@@ -207,3 +207,19 @@ do not overwrite main strategy.
 - Mechanism narrative in memory must be corrected (v5 is not "pure dealer
   gamma hedging" — it's partially MR proxy)
 
+### v10: IV skew signal — NULL RESULT (documented failure)
+Tested at ~03:00 CT. Skew = IV(98% put) - IV(102% call) for 1DTE expiry.
+- Corr(skew, next-day pnl) = -0.036 (zero)
+- Corr(skew, r1d) = 0.256 (partially MR-correlated, so not independent)
+- Skew HIGH tercile across all 574 days: PF 0.85 (anti-predictive)
+- Skew HIGH across buckets: EXT 1.30 / OOS 0.92 / IS 0.33 → FAILS OOS
+- Skew HIGH without MR (independent alpha check): PF 0.66 — NO independent edge
+
+**Verdict**: IV skew is not a tradeable signal in my EOD data. Dropping.
+Matches the academic finding that skew's predictive power is mostly in cross-
+section of stocks, not time-series of index.
+
+### Kicked off:
+- 2023 data download (PID 4335) for 4th-tier OOS validation
+  (~250 days at ~15s = ~60 min, then ~40 min enrich)
+

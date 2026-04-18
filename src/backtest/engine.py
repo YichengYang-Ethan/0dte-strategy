@@ -90,6 +90,13 @@ class BacktestConfig:
     # disabled research flag — do NOT enable for production. Textbook overfit from
     # small-N multi-hypothesis testing.
     weekend_gap_only: bool = False
+    # Signal modes (candidate variants for paper-trade A/B testing):
+    #   "gex"      — v5 default: NEG_GAMMA + pos<0.15 (current production)
+    #   "mr"       — prior-day SPY return < mr_threshold triggers (Baltussen 2024)
+    #   "gex_or_mr" — union (v9 candidate, PF 1.51 across all 3 OOS tiers)
+    #   "gex_and_mr" — intersection (tightest, few trades)
+    signal_mode: str = "gex"
+    mr_threshold_pct: float = -0.5
 
 
 class BacktestEngine:
@@ -100,6 +107,38 @@ class BacktestEngine:
         self.trades: list[BacktestTrade] = []
         # Walk-forward VEX history for tercile classification (no lookahead)
         self._vex_history: list[float] = []
+        # Pre-loaded daily spot history for MR signal (prior-day return).
+        # Populated on first run() call; avoids reloading parquets in inner loop.
+        self._spot_by_date: dict = {}
+        self._sorted_dates: list = []
+
+    def _preload_spots(self, data_dir: Path):
+        if self._spot_by_date:
+            return
+        for fp in sorted(data_dir.glob("*.parquet")):
+            try:
+                d = datetime.strptime(fp.stem, "%Y%m%d").date()
+            except ValueError:
+                continue
+            try:
+                df = pd.read_parquet(fp, columns=["spot"])
+                if df.empty or "spot" not in df.columns:
+                    continue
+                s = df["spot"].dropna()
+                if not s.empty:
+                    self._spot_by_date[d] = float(s.iloc[0])
+            except Exception:
+                continue
+        self._sorted_dates = sorted(self._spot_by_date.keys())
+
+    def _prior_day_return_pct(self, d) -> Optional[float]:
+        if d not in self._spot_by_date or not self._sorted_dates:
+            return None
+        idx = self._sorted_dates.index(d)
+        if idx < 1:
+            return None
+        prev = self._sorted_dates[idx - 1]
+        return (self._spot_by_date[d] - self._spot_by_date[prev]) / self._spot_by_date[prev] * 100
 
     def _vex_tercile(self, vex_today: float) -> str:
         """Classify today's VEX against expanding-window history.
@@ -139,6 +178,8 @@ class BacktestEngine:
         logger.info(f"Backtesting {len(files)} days from {data_dir} mode={mode}")
 
         if mode == "swing_1dte":
+            if self.config.signal_mode in {"mr", "gex_or_mr", "gex_and_mr"}:
+                self._preload_spots(data_dir)
             for i in range(len(files) - 1):
                 try:
                     self._run_swing_1dte(files[i], files[i + 1])
@@ -205,7 +246,46 @@ class BacktestEngine:
         vex_bucket = self._vex_tercile(vanna.total_vanna)
         self._vex_history.append(vanna.total_vanna)
 
-        if sig.direction == "NEUTRAL" or sig.confidence < self.config.min_confidence:
+        gex_trigger = (sig.direction != "NEUTRAL"
+                        and sig.confidence >= self.config.min_confidence)
+
+        mr_trigger = False
+        if self.config.signal_mode != "gex":
+            r1 = self._prior_day_return_pct(d)
+            mr_trigger = r1 is not None and r1 < self.config.mr_threshold_pct
+
+        # Signal-mode composition
+        mode = self.config.signal_mode
+        if mode == "gex":
+            trigger = gex_trigger
+        elif mode == "mr":
+            trigger = mr_trigger
+            if mr_trigger and not gex_trigger:
+                # Fabricate a BULLISH signal for the MR-only path; GEX levels may
+                # not have a clean reason, so record what we can.
+                from src.signal.generator import TradeSignal
+                sig = TradeSignal(
+                    direction="BULLISH", confidence=0.65,
+                    target=None, stop=None, regime=levels.regime,
+                    reason=f"mean_reversion r1d<{self.config.mr_threshold_pct:.1f}%",
+                    time_session=sig.time_session,
+                )
+        elif mode == "gex_or_mr":
+            trigger = gex_trigger or mr_trigger
+            if mr_trigger and not gex_trigger:
+                from src.signal.generator import TradeSignal
+                sig = TradeSignal(
+                    direction="BULLISH", confidence=0.65,
+                    target=None, stop=None, regime=levels.regime,
+                    reason=f"mr_alone r1d<{self.config.mr_threshold_pct:.1f}%",
+                    time_session=sig.time_session,
+                )
+        elif mode == "gex_and_mr":
+            trigger = gex_trigger and mr_trigger
+        else:
+            raise ValueError(f"Unknown signal_mode: {mode}")
+
+        if not trigger:
             return
 
         # VEX filter (walk-forward; no lookahead — uses only prior days for tercile)
