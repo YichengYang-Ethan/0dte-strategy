@@ -221,5 +221,76 @@ section of stocks, not time-series of index.
 
 ### Kicked off:
 - 2023 data download (PID 4335) for 4th-tier OOS validation
-  (~250 days at ~15s = ~60 min, then ~40 min enrich)
+  (~250 days, actual rate ~40s/day → ~3 hr total)
+
+---
+
+## 🔬 Bootstrap Confidence Intervals (scripts/bootstrap_pf.py)
+
+1000-rep trade resampling with replacement. Reveals the honest statistical
+power of our "edges":
+
+| Mode      | Bucket    | N   | PF   | 95% CI        |
+|-----------|-----------|-----|------|---------------|
+| gex       | EXT_OOS   | 67  | 1.29 | [0.60, 2.63]  |
+| gex       | ALL       | 113 | 1.43 | [0.81, 2.59]  |
+| mr        | ALL       | 109 | 1.74 | [0.98, 3.14]  |
+| gex_or_mr | ALL       | 151 | 1.51 | [0.91, 2.48]  |
+| gex_and_mr| ALL       | 71  | 1.71 | [0.87, 3.63]  |
+
+**Every mode × bucket has 95% CI that includes PF < 1**.
+
+Pairwise comparisons: gex vs gex_or_mr CIs **overlap** in all 4 buckets → the
+"gex_or_mr is better" claim is not statistically significant with current data.
+
+**Honest takeaway**: 113-150 trades is insufficient to reliably distinguish
+signal variants. The point estimates are mostly noise around a fuzzy central
+tendency of PF ≈ 1.3-1.7. Publication-bias haircut (30-50%) pushes expected
+live PF down to 0.9-1.2.
+
+**Implication**: should not promote ANY variant based on these backtests alone.
+Paper trading (6+ months) is the only honest path forward. The 2023 OOS
+expansion will narrow CIs by ~30% but won't resolve fundamental noise.
+
+---
+
+## 🚨 Y2023 4-TIER OOS — ALL MODES LOSE
+
+Completed at 05:44 CT. 824-day dataset, frozen v5 rules + all modes:
+
+```
+Y2023 (250 days, NEVER seen during design):
+  gex         N=58  WR 36.2%  PnL -$1,898  PF 0.78  Sharpe -1.59
+  mr          N=57  WR 36.8%  PnL -$753    PF 0.91  Sharpe -0.60
+  gex_or_mr   N=72  WR 37.5%  PnL -$970    PF 0.91  Sharpe -0.62
+  gex_and_mr  N=43  WR 34.9%  PnL -$1,681  PF 0.75  Sharpe -1.88
+```
+
+Every mode loses money in 2023. WR collapsed from 53-58% (2024-2026) → 34-37%
+(2023). ALL 824-day numbers drop accordingly:
+```
+  gex          PF 1.25 (was 1.43)  Sharpe 1.11 (was 1.78)
+  mr           PF 1.46 (was 1.74)
+  gex_or_mr    PF 1.32 (was 1.51)
+```
+
+**Root cause (hypothesis, not validated)**: 2023 was low-vol Fed-driven trending
+(SVB Mar, melt-up Q4). Buy-the-dip convex long-call structure depends on
+vol/dispersion; in low-vol trending regimes:
+- Cheap IV → 0.70Δ calls cost more in theta than bounces pay
+- Trend dominates mean reversion
+- Gap risk asymmetric
+
+**Actionable honest conclusions**:
+1. Strategy is REGIME-DEPENDENT, not universal edge.
+2. Bootstrap CIs already hinted at this; Y2023 confirmed.
+3. Publication bias haircut: expect 30-50% live degradation on top of this.
+4. A regime filter IS needed, but we've tried: r5d, r10d, IV skew, weekend —
+   all failed OOS. Further filter search = overfitting risk.
+5. Paper trade would take years to distinguish this from random.
+
+**Recommendation**: Either (a) accept as a sometimes-works strategy with
+aggressive position-size limits, or (b) pivot to a fundamentally different
+structure (e.g., Vilkov's put ratio spread — short-vol, opposite structural
+exposure). Honest: I would NOT deploy real capital on v5 given Y2023.
 
