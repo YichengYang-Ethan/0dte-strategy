@@ -354,3 +354,50 @@ Next steps user should consider:
 4. Accept that 0DTE edge at retail scale may require proprietary data/execution
    (as per Adams/Fontaine/Ornthanalai 2024 — MMs capture most of the edge)
 
+---
+
+## Morning follow-up (07:30 CT) — Short-vol baseline discovery
+
+### Unconditional short straddle (sell ATM call+put daily, 1DTE)
+```
+                N    WR     PnL      PF
+Y2023          250  60.0%  +$4,716  1.24  ← positive where v5 FAILED
+EXT_OOS        343  58.9%  -$2,128  0.95
+ORIG_OOS       117  66.7%  +$5,087  1.58
+ORIG_IS        114  63.2%  +$6,243  1.48
+ALL (824d)     824  60.9%  +$13,918 1.16
+```
+
+**Structurally regime-complementary to v5**:
+- v5 long-call: Y2023 0.78 / 2024-2026 avg 1.60
+- Short straddle: Y2023 1.24 / 2024-2026 varies
+
+Combining them (regime-switching) would need a reliable regime classifier —
+which I could not find (all filter attempts failed OOS).
+
+### Walk-forward IV tercile conditioning (no lookahead)
+
+None of low/mid/high IV terciles pass all 4 buckets:
+- IV low:  ALL 1.26 but Y2023 1.74 & EXT_OOS 0.85 → regime-mixed
+- IV high: ALL 1.01 (basically flat)
+- IV mid:  ALL 1.34 but Y2023 0.67 → flipped sign
+
+### Updated final recommendation
+
+**There is NO universal edge I've been able to find in 824 days of SPY 1DTE
+EOD options data.** What exists:
+- v5 long-call: works in high-vol / contracting-vol regimes (2024-2026)
+- Short straddle: works in low-vol stable regimes (2023)
+- Combined with perfect regime classifier: theoretically sum to robust edge
+- Without regime classifier: both exhibit losing years
+
+This is consistent with literature (Adams 2024: MMs capture most retail 0DTE
+edge; Vilkov: requires ML classifier on 10+ features to find edge).
+
+### Paper trade today (2026-04-17 Friday)
+SPY closed $710.14. POS_GAMMA regime, pos=0.98 (near call_wall). v5 signal:
+NO_SIGNAL. Consistent with strategy's rare-trigger design.
+
+Paper_trade.py now uses v2 (Theta Standard Greeks) enrichment for consistency
+with the historical dataset.
+
