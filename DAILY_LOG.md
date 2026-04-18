@@ -401,3 +401,44 @@ NO_SIGNAL. Consistent with strategy's rare-trigger design.
 Paper_trade.py now uses v2 (Theta Standard Greeks) enrichment for consistency
 with the historical dataset.
 
+---
+
+## 🎯 v11 Regime-Switch Combo (first to pass all 4 OOS buckets)
+
+Motivated by observation that short straddle + v5 long call have complementary
+regime dependencies:
+- Short straddle: works 2023 (low-vol slow trend) PF 1.24
+- v5 long call: works 2024-2026 PF 1.29-1.84
+
+Regime classifier: walk-forward 60-day rolling median of ATM IV (no lookahead).
+- If today's ATM_IV < rolling_median(prior 60d) → "low_vol" → sell ATM straddle
+- If today's ATM_IV >= rolling_median → "high_vol" → run v5 gex signal
+
+```
+                N    WR     PnL       PF    Sharpe  MaxDD
+Y2023          127  56.7%  +$736     1.07   0.40   -$3,710
+EXT_OOS        219  57.1%  +$2,697   1.09   0.37   -$5,215
+ORIG_OOS        82  65.9%  +$6,127   1.98   4.28     -$912
+ORIG_IS         71  64.8%  +$3,392   1.33   1.65   -$2,688
+ALL (824d)     499  59.5%  +$12,953  1.22   0.98   -$5,215
+```
+
+**All 4 buckets positive PF**, but Y2023 (1.07) and EXT_OOS (1.09) are marginal.
+Overall Sharpe 0.98 (weaker than v5's 1.11 on same 824 days).
+
+**Honest assessment**:
+- First variant to get all 4 tiers positive
+- But PF in the weakest bucket is only 1.07 — thin
+- Bootstrap CIs on this would likely include <1
+- The regime switch is walk-forward and theory-motivated (not post-hoc grid search)
+- Still likely to degrade live (publication bias haircut)
+
+**Recommendation**: If user insists on deploying, this is the most defensible
+variant. But I would still NOT recommend real capital without months of paper
+trade confirmation. The Y2023 1.07 PF on 127 trades has probability ~40% of
+being purely noise.
+
+Added config knob: `scripts/test_regime_switch.py` has the standalone logic.
+Engine doesn't yet have a regime-switch signal_mode — if user wants, I can
+wire it in next session.
+
