@@ -294,3 +294,63 @@ aggressive position-size limits, or (b) pivot to a fundamentally different
 structure (e.g., Vilkov's put ratio spread — short-vol, opposite structural
 exposure). Honest: I would NOT deploy real capital on v5 given Y2023.
 
+---
+
+## Final structural inversion test (06:00 CT)
+
+Tested inverting the trade structure on the same signal (NEG_GAMMA + pos<0.15):
+
+```
+                      Y2023    EXT_OOS   ORIG_OOS   ORIG_IS   ALL
+long_call (v5)        0.78     1.29      1.84       1.67      1.25  ← baseline
+short_call            1.11     0.72      0.45       0.52      0.72
+short_straddle        1.05     0.54      1.86       8.25      0.97
+long_put              1.00     0.81      0.25       0.34      0.65
+```
+
+**Key observation**: long_call fails 2023 / works 2024-2026. short_call is the
+OPPOSITE pattern (works 2023 / fails 2024-2026). Same trigger rule, opposite
+structural exposure, regime-complementary returns.
+
+**Interpretation**: The NEG_GAMMA + pos<0.15 signal is capturing a VOL REGIME
+indicator, not direction. Without a vol regime classifier to decide which side
+(long vs short premium), the unconditional strategy's edge nets to nothing.
+
+## 🏁 Final honest assessment (824 days, 5+ hours of iteration)
+
+What works:
+- Theta Data Standard upgrade is clean value (v5 data quality > v4 BSM)
+- Signal-mode multiplexer is useful infrastructure for future A/B tests
+- 3 OOS tiers revealed regime-dependence that 1-2 tiers would have hidden
+- Literature updates (Baltussen 2024, Vilkov 2023, Adams 2024) sharpen priors
+
+What doesn't work:
+- v5 GEX signal: fails Y2023 (PF 0.78)
+- Pure MR: fails Y2023 (PF 0.91)
+- Unions/intersections: fail Y2023 (PF 0.75-0.91)
+- Structural inversions (short call/straddle, long put): also fail
+- Regime filters (r5d, r10d, VIX, IV skew, weekend): all fail OOS
+- Bootstrap CIs include loss in every mode × every bucket
+
+What I did NOT test (out of scope tonight):
+- Vilkov put-ratio spread (different structure, SPX not SPY, ML classifier)
+- Intraday entries with Theta Standard 1-min data (would need new engine)
+- ML classifier on Vilkov features against my SPY 1DTE data
+- Longer history (2021-2022)
+
+**Honest conclusion for user**:
+Do not deploy real capital on v5 or any variant tested tonight. The 824-day
+4-tier OOS shows the edge is not robust across market regimes. The strategy
+works in 2024-2026 and fails in 2023.
+
+Consider the tested infrastructure (data, engine, paper_trade.py) as a valuable
+sandbox for testing future strategies, but the specific alpha hypothesis
+(buy 1DTE ITM calls near put_wall in NEG_GAMMA) does NOT hold out-of-sample.
+
+Next steps user should consider:
+1. Abandon this strategy or keep paper-trading with conservative size
+2. Try Vilkov's put-ratio-spread approach (requires intraday SPX data + ML)
+3. Try other fundamentally different structures (e.g., delta-neutral IV scalping)
+4. Accept that 0DTE edge at retail scale may require proprietary data/execution
+   (as per Adams/Fontaine/Ornthanalai 2024 — MMs capture most of the edge)
+
