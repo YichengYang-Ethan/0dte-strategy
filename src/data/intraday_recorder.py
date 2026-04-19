@@ -59,11 +59,13 @@ from src.data.schema_v1 import SCHEMAS
 
 logger = logging.getLogger(__name__)
 
-# Terminal endpoints (default local Theta Terminal)
-REST_BASE = os.getenv("THETA_REST_BASE", "http://127.0.0.1:25510/v2")
+# Terminal endpoints (Theta Terminal v3, build >= 20260327).
+# v3 changed ports (25510→25503), URL base (/v2→/v3), and param (root→symbol).
+REST_BASE = os.getenv("THETA_REST_BASE", "http://127.0.0.1:25503/v3")
 WS_URL = os.getenv("THETA_WS_URL", "ws://127.0.0.1:25520/v1/events")
+# No dedicated system/status endpoint in v3; healthcheck uses a light list endpoint
 TERMINAL_STATUS_URL = os.getenv(
-    "THETA_TERMINAL_STATUS", "http://127.0.0.1:25510/v2/system/mdds/status"
+    "THETA_TERMINAL_STATUS", "http://127.0.0.1:25503/v3/option/list/symbols"
 )
 
 # Recorder config
@@ -118,23 +120,25 @@ class Metrics:
 # -----------------------------------------------------------------------------
 
 async def verify_terminal_healthy(client: httpx.AsyncClient) -> bool:
-    """Hit mdds/status and fpss/status. Both must be live before connecting."""
-    for endpoint in ["mdds/status", "fpss/status"]:
-        url = f"{REST_BASE}/system/{endpoint}"
-        try:
-            r = await client.get(url, timeout=5.0)
-            if r.status_code != 200:
-                logger.error(f"{endpoint} returned {r.status_code}")
-                return False
-            body = r.text.strip().upper()
-            if body not in ("CONNECTED", "OK", "HEALTHY"):
-                logger.error(f"{endpoint} status body unexpected: {body!r}")
-                return False
-            logger.info(f"{endpoint}: {body}")
-        except Exception as e:
-            logger.error(f"{endpoint} health check failed: {e}")
+    """Ping a known-light v3 endpoint. v3 has no dedicated system/status.
+
+    option/list/symbols returns a large CSV; we only care that HTTP 200
+    comes back (indicates Terminal loaded subscription + is serving).
+    """
+    try:
+        r = await client.get(TERMINAL_STATUS_URL, timeout=10.0)
+        if r.status_code != 200:
+            logger.error(f"Terminal healthcheck HTTP {r.status_code}: {r.text[:200]}")
             return False
-    return True
+        # Response is CSV starting with 'symbol\n"..."...'
+        if not r.text.startswith("symbol"):
+            logger.error(f"Unexpected healthcheck body: {r.text[:200]}")
+            return False
+        logger.info(f"Terminal healthy (listing {len(r.text.splitlines()) - 1} symbols)")
+        return True
+    except Exception as e:
+        logger.error(f"Terminal healthcheck failed: {e}")
+        return False
 
 
 # -----------------------------------------------------------------------------
@@ -144,32 +148,44 @@ async def verify_terminal_healthy(client: httpx.AsyncClient) -> bool:
 async def list_spxw_0dte_contracts(
     client: httpx.AsyncClient, session_date: date
 ) -> list[Contract]:
-    """Enumerate active SPXW contracts expiring on session_date."""
+    """Enumerate active SPXW contracts expiring on session_date.
+
+    v3 API: /option/list/contracts/{request_type}?symbol=SPXW&date=YYYYMMDD
+    Returns CSV: symbol,expiration,strike,right
+    """
+    import csv
+    import io
+
     date_str = session_date.strftime("%Y%m%d")
-    url = f"{REST_BASE}/list/contracts/option/trade"
-    params = {
-        "root": "SPXW",
-        "start_date": date_str,
-        "end_date": date_str,
-    }
+    url = f"{REST_BASE}/option/list/contracts/quote"
+    params = {"symbol": "SPXW", "date": date_str}
+
     try:
         r = await client.get(url, params=params, timeout=30.0)
         r.raise_for_status()
-        data = r.json()
     except Exception as e:
         logger.error(f"list_contracts failed: {e}")
         return []
 
-    # Theta REST returns {'header': {...}, 'response': [[root, exp, strike, right], ...]}
-    rows = data.get("response", [])
+    reader = csv.DictReader(io.StringIO(r.text))
     contracts: list[Contract] = []
-    for row in rows:
-        if len(row) < 4:
+    target_exp = f"{session_date.year}-{session_date.month:02d}-{session_date.day:02d}"
+    for row in reader:
+        exp_iso = row.get("expiration", "")
+        if exp_iso != target_exp:
+            continue  # filter: only same-day (0DTE)
+        try:
+            strike_dollars = float(row["strike"])
+            right_word = row["right"].strip().upper()
+            right_code = "C" if right_word.startswith("C") else "P"
+            contracts.append(Contract(
+                root="SPXW",
+                expiration_yyyymmdd=int(date_str),
+                strike_1dc=int(round(strike_dollars * 1000)),
+                right=right_code,
+            ))
+        except (KeyError, ValueError):
             continue
-        root, exp, strike, right = row[0], int(row[1]), int(row[2]), str(row[3])
-        if exp != int(date_str):
-            continue  # defensive: only today's expiry
-        contracts.append(Contract(root, exp, strike, right))
 
     logger.info(f"SPXW 0DTE contracts for {date_str}: {len(contracts)}")
     return contracts
