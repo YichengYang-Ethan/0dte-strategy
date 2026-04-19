@@ -44,7 +44,7 @@ load_dotenv(".env")
 asyncio.set_event_loop(asyncio.new_event_loop())
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
-from src.data.enrich import enrich_day, _get_client
+from src.data.enrich_v2 import enrich_day_v2, _get_client
 from src.data.historical import download_day
 from src.gex.greeks import enrich_greeks
 from src.gex.calculator import calculate_gex_profile, identify_levels, calculate_vanna_exposure
@@ -67,7 +67,7 @@ def _fetch_and_enrich(d: date) -> bool:
             logging.error(f"Download failed for {d}")
             return False
 
-    return enrich_day(client, "SPY", d, parquet)
+    return enrich_day_v2(client, "SPY", d, parquet)
 
 
 def _next_trading_day(d: date) -> date:
