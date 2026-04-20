@@ -200,6 +200,99 @@ def rolling_zscore_shifted(
 
 
 # ---------------------------------------------------------------------------
+# Intraday spot series + realized variance (leak-safe)
+# ---------------------------------------------------------------------------
+
+def intraday_spot_series_leak_safe(
+    day_dir: Path, start: str = "09:30", end: str = "15:55"
+) -> pd.DataFrame:
+    """Return 1-min spot series (timestamp, underlying_price) within [start, end].
+
+    Sources underlying_price from ALL contracts' greeks parquets, takes median
+    per minute to denoise (many contracts observe the same underlying).
+    Clips to cutoff [start, end] strictly.
+    """
+    files = sorted((day_dir / "greeks").glob("*.parquet"))
+    if not files:
+        return pd.DataFrame(columns=["min_bucket", "spot"])
+
+    rows = []
+    for f in files:
+        try:
+            df = pd.read_parquet(f, columns=["timestamp", "underlying_price"])
+            df = df[df["underlying_price"] > 0]
+            if df.empty:
+                continue
+            df["min_bucket"] = df["timestamp"].str.slice(0, 16)
+            df["tod"] = df["timestamp"].str.slice(11, 16)
+            df = df[(df["tod"] >= start) & (df["tod"] <= end)]
+            if df.empty:
+                continue
+            rows.append(df[["min_bucket", "underlying_price"]])
+        except Exception:
+            continue
+
+    if not rows:
+        return pd.DataFrame(columns=["min_bucket", "spot"])
+
+    big = pd.concat(rows, ignore_index=True)
+    # Median per minute across contracts (denoise)
+    grouped = big.groupby("min_bucket")["underlying_price"].median().reset_index()
+    grouped.columns = ["min_bucket", "spot"]
+    grouped = grouped.sort_values("min_bucket").reset_index(drop=True)
+    return grouped
+
+
+def realized_variance_leak_safe(
+    day_dir: Path, t: str = "15:00", end: str = "15:55"
+) -> dict:
+    """Sum of squared 1-min log returns from decision time t to end.
+
+    Also returns spot at t and at end for signed/abs return computation.
+    """
+    series = intraday_spot_series_leak_safe(day_dir, start=t, end=end)
+    if len(series) < 2:
+        return {"realized_var": np.nan, "spot_t": np.nan, "spot_end": np.nan, "n_bars": 0}
+
+    log_ret = np.log(series["spot"]).diff().dropna()
+    realized_var = float((log_ret ** 2).sum())
+
+    return {
+        "realized_var": realized_var,
+        "spot_t": float(series["spot"].iloc[0]),
+        "spot_end": float(series["spot"].iloc[-1]),
+        "n_bars": len(series),
+    }
+
+
+def intraday_labels_leak_safe(day_dir: Path, decision_time: str = "15:00") -> dict | None:
+    """Compute the 3 intraday labels prescribed by the MVP plan.
+
+    Labels are all from decision_time t → 15:55 ET:
+      - signed_ret_pct: (spot_end − spot_t) / spot_t × 100
+      - abs_ret_pct: |signed_ret_pct|
+      - realized_var: sum of squared 1-min log returns in [t, 15:55]
+    """
+    d = datetime.strptime(day_dir.name.split("=")[1], "%Y-%m-%d").date()
+    rv = realized_variance_leak_safe(day_dir, t=decision_time, end="15:55")
+    if np.isnan(rv["spot_t"]) or np.isnan(rv["spot_end"]) or rv["spot_t"] <= 0:
+        return None
+
+    signed = (rv["spot_end"] - rv["spot_t"]) / rv["spot_t"] * 100
+
+    return {
+        "date": d,
+        "decision_time": decision_time,
+        "spot_t": rv["spot_t"],
+        "spot_end": rv["spot_end"],
+        "n_bars": rv["n_bars"],
+        "signed_ret_pct": signed,
+        "abs_ret_pct": abs(signed),
+        "realized_var": rv["realized_var"],
+    }
+
+
+# ---------------------------------------------------------------------------
 # Future-poison regression test
 # ---------------------------------------------------------------------------
 
