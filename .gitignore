@@ -38,8 +38,10 @@ data/cache/
 Thumbs.db
 
 # Logs
-logs/
-*.log
+# Research reports in logs/*.md are tracked (contain verdicts, diagnostics)
+# Raw runtime logs (*.log) are ignored
+logs/*.log
+logs/__pycache__/
 
 # Results (regenerable)
 results/
