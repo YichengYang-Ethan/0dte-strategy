@@ -2,17 +2,18 @@
 
 ## Context
 
-I'm a UIUC CS+Stats+Econ student (4.0 GPA, F1 visa, job-hunting quant/SWE/DS
-Summer 2026). I have spent roughly 1 month building an SPX 0DTE options
-research pipeline, inspired by a friend's ("Joey") live bot. Along the way
-I've paid for Theta Data ($40/mo), spent ~100+ hours, and gone through 4
-rounds of external review with GPT Pro. Each round falsified a branch
-and forced a pivot. I'm now at a pre-registration decision point for a
-full-fledged 10-day rebuild.
+This is an SPX 0DTE options research pipeline inspired by a live-trading
+friend's bot (referred to as "Joey" in the codebase). The project has
+cycled through 4 rounds of external review with GPT Pro, each round
+falsifying a branch and forcing a pivot. The repo is now at a
+pre-registration decision point for a full 10-day rebuild (R0 → R5).
 
-**I have one Ultra Review left for the month.** I'm spending it on the
-entire project, not on code-level nitpicks, because I need a brutal
-outside view before committing another 10 days to rebuilding.
+Review this project purely on its technical and methodological merits.
+Do not factor in author identity, resume value, career trajectory,
+opportunity cost, visa status, or any non-technical consideration. The
+only question is whether the research is scientifically sound and
+whether the next 10 days of work are justified by the evidence in the
+repo.
 
 ## Repository
 
