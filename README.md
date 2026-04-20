@@ -1,77 +1,157 @@
-# Options Strategy Research
+# 0DTE Strategy Research
 
-Research and implementation of two distinct GEX/Vanna-driven options strategies on SPY/SPX.
+Research and implementation of SPX 0DTE options strategies, with a long
+archival trail of prior attempts.
 
-## Two Strategies
+**Current direction:** Joey-inspired reconstruction (rule-based,
+event-triggered, long-gamma, target-price engine). See
+[`ARCHITECTURE_JOEY_REBUILD.md`](ARCHITECTURE_JOEY_REBUILD.md) for the
+active R0 spec.
 
-### 1. 1DTE Swing (archived — `v1-1dte-archive` tag)
+---
 
-EOD → next-EOD swing on SPY 0.70Δ 1DTE calls, signal-gated by dealer-gamma regime + position-in-range.
+## Project timeline (most recent first)
 
-**Status**: Research complete, archived after 3 rounds of GPT Pro review.
+| Phase | Status | Ref |
+|-------|--------|-----|
+| **Joey-inspired reconstruction (R0 architecture)** | **active** | `ARCHITECTURE_JOEY_REBUILD.md` |
+| Short-vol exploratory branch | archived | `ARCHIVE_SHORT_VOL_BRANCH.md` |
+| Intraday 5-day MVP (direction-first) | falsified | `logs/intraday_day3_report.md` |
+| Daily/overnight baselines M1-M4 | falsified | `GPT_PRO_M4_FALSIFICATION_COMPLETE.md` |
+| 1DTE swing (prior project) | archived | tag `v1-1dte-archive` |
 
-**Key findings**:
-- Signal captures conditional drift in SPY spot return (Y2023 PF 1.17, full-sample PF 1.67, t ≈ 2.06)
-- Long-call wrapper eats ~41% of the delta-adjusted edge; debit spread eats ~95%
-- Baltussen 2021 "hedging demand intraday momentum" thesis partially overturned by Adams 2024 Fed paper — mechanism weakened post-2023 0DTE boom
-- Overnight gap risk not mitigated
-- **Archived** in favor of intraday 0DTE
+Each row is a complete falsification or pivot decision, backed by an
+external review (GPT Pro) verdict. Nothing is "paused" or "on hold" —
+if it isn't in the active row, it's dead or on a branch.
 
-**Artifacts**:
-- `src/` — full engine, GEX/Vanna calculator, signal generator, fill simulator
-- `scripts/` — 4-tier OOS validator, bootstrap PF CIs, instrument sanity check
-- `data/historical/spy/` — 825 days of v2-enriched parquets (2023-01-03 → 2026-04-17)
-- `PROJECT_STATUS.md` — full rationale for pivot
-- `GPT_PRO_*.md` — three rounds of external review
+---
 
-### 2. Intraday 0DTE (active — `feature/0dte-intraday` branch)
+## Active phase: Joey reconstruction
 
-Fully automated intraday 0DTE bot on SPX (cash-settled European options), 1–3 hour holds, limit-bid-ask execution via IB API.
+### What it is
 
-**Thesis**: MMs are profit-maximizing agents holding significant option book. When customer flow concentrates at a strike (OI buildup + IV spike + signed aggressor buying), MM delta hedging becomes constrained and their own book pressure creates mechanical incentive to push spot toward the strike that minimizes their book loss. This is the **active MM repositioning** thesis, distinct from passive dealer short-gamma pinning.
+A rule-based SPX 0DTE trading system reconstructed from a WeChat
+transcript with a friend ("Joey") who runs a live bot. **Not a
+replication** — transcript doesn't give code-level spec and Joey won't
+be asked for clarifications. Honest framing is **Joey-inspired
+reconstruction from transcript + public literature + own inference**.
 
-**Advantages over 1DTE**:
-- Mechanism matches data time scale (intraday signal + intraday data + intraday execution)
-- No overnight gap risk (all positions closed same day)
-- Convex payoff geometry (70% WR / +100-1500% wins / −40% losses in reference implementation)
-- Barbon-Buraschi Gamma Fragility literature still supports the mechanism at 0DTE expiry
+### What's different from the prior work
 
-**Current phase**: Design + GPT Pro research brief (`GPT_PRO_0DTE_BRIEF.md`)
+| Axis | Prior attempt | Joey rebuild |
+|------|---------------|-------------|
+| direction | tried short-vol; tried regression | **long gamma** (buy ATM call/put/butterfly) |
+| entry timing | fixed 15:00 ET decision | **event / structure triggered**, minute resolution |
+| target | regression on signed_ret_pct / realized_var | **rule-based target price engine** |
+| method | OLS + Bonferroni | **grid-searched integer weights** |
+| features | delta/gamma flow + HHI + atm±1% GEX | walls + bucketed Vanna + IV spike + abnormal flow |
+| instrument | ATM only | **call / put / butterfly** by target geometry |
+| exit | fixed 15:55 ET | **dynamic** (target hit / structure fail / stop / time) |
+
+### Stages
+
+Five stages, each with a pre-declared kill gate (see
+`ARCHITECTURE_JOEY_REBUILD.md` §6):
+
+- **R1** — Vanna pipeline (bucketed by expiry, dealer-signed OI-weighted)
+- **R2** — Structural features (call/put walls, IV spike, abnormal flow)
+- **R3** — Target engine + dumb-baseline kill gate
+- **R4** — Long-gamma PnL with conservative (ask-in/bid-out) fills
+- **R5** — Nested walk-forward grid search + stability gate
+
+Total: ~10 days, stop-don't-rationalize at every gate.
+
+---
+
+## Archived branches
+
+### Short-vol exploratory branch
+
+A statistically significant finding that `atm_gex_skew` predicts
+intraday realized variance compression (matches Dim-Eraker-Vilkov
+2024). **Not the active path** — structurally unrelated to Joey's
+long-gamma bot. Full details: `ARCHIVE_SHORT_VOL_BRANCH.md`.
+
+- Tag: `v2-short-vol-exploratory-archive`
+- Branch: `archive/short-vol-exploratory`
+- Findings: V1 state-only ΔR² = +0.008 over persistence baseline
+  (Bonferroni-significant). Too small to survive short-straddle
+  wrapper costs.
+
+### 1DTE swing (prior project)
+
+EOD → next-EOD swing on SPY 1DTE 0.70Δ calls. Full GEX/Vanna-driven
+signal, 3 rounds of GPT Pro review, overnight gap risk unmitigated.
+Archived in favor of intraday.
+
+- Tag: `v1-1dte-archive`
+- Findings: signal captured conditional drift (PF 1.67 full-sample),
+  but long-call wrapper ate ~41% of edge; debit spread ate ~95%.
+
+---
 
 ## Data
 
-- **Theta Data Standard** ($80/mo): historical EOD OI + Greeks + IV for SPY (used for 1DTE research + future intraday OI baseline)
-- **Theta Data Options Pro** ($160/mo, planned): intraday 1-min OPRA quotes/trades + streaming Greeks for SPX 0DTE
+- **Theta Data Pro** (~$40/mo Value tier): historical 1-min OPRA
+  trades/quotes + Greeks for SPX. 952 days downloaded (2022-07 to
+  2026-04). 16 GB, ATM ±3% strike range.
+- **IB Gateway paper** (port 4002, DUH719324): planned execution venue
+  for future live trading. Delayed SPY $711 as of 2026-04-20.
 
-## Broker
+Not used (but flagged):
+- Massive.com L2 websocket ($200/mo) — Joey's data source. Current
+  Massive docs expose NBBO but no documented options L2 depth. Theta
+  Data historical is sufficient for research stage.
 
-- **IB Gateway** (paper account, port 4002): primary for SPX 0DTE execution via ib_insync
-- **moomoo OpenD** (localhost:11111): backup
+---
 
-## Repo Layout
+## Repo layout
 
 ```
-src/
-├── gex/          # GEX + Vanna calculation (shared across strategies)
-├── signal/       # Trade signal generation (1DTE v5 rule)
-├── execution/    # IBKR order execution + position management
-├── risk/         # Risk limits (daily loss, position size, time windows)
-├── data/         # Options data fetching (IBKR, Theta Data)
-└── backtest/     # Historical backtesting framework (swing_1dte mode)
+ARCHITECTURE_JOEY_REBUILD.md   ← R0 pre-registration (active)
+ARCHIVE_SHORT_VOL_BRANCH.md    ← what's in the short-vol archive
 
-scripts/          # validation, bootstrap, instrument sanity checks
-data/historical/  # 825 days SPY EOD parquets
+src/pipeline/
+├── leak_safe.py               ← leak-safe primitives (reusable)
+└── intraday_features.py       ← short-vol feature extraction (archive)
+
+scripts/                       ← one-shot analyses per stage
+├── intraday_day1_labels.py    ← labels (reusable)
+├── intraday_day2_features.py  ← short-vol features (archive)
+├── intraday_day2_5_diagnostics.py  ← archive
+└── intraday_day3_baselines.py      ← archive
+
+data/
+├── historical_0dte/           ← 952 days Theta Data parquets (16 GB, gitignored)
+├── intraday_labels.parquet    ← reusable for Joey rebuild
+└── intraday_features.parquet  ← archive
+
+logs/                          ← per-stage reports
+GPT_PRO_*.md                   ← external review briefs + verdicts
 ```
 
-## Setup
+---
 
-```bash
-cp .env.example .env
-# Edit .env with Theta credentials + IB connection info
+## GPT Pro review history
 
-pip install -e ".[dev]"
-```
+Each pivot or kill decision is backed by a dated external review. Full
+set preserved in repo root; newest first:
 
-## Risk
+| Date | Brief | Verdict topic |
+|------|-------|---------------|
+| 2026-04-20 | `GPT_PRO_REALIGN_JOEY_PATH.md` | Am I on Joey's path or drifting? |
+| 2026-04-19 | `GPT_PRO_DAY2_5_UNEXPECTED.md` | Direction dead, volatility surfaces — snooping? |
+| 2026-04-18 | `GPT_PRO_M4_FALSIFICATION_COMPLETE.md` | M1-M4 all failed — pivot direction |
+| 2026-04-17 | `GPT_PRO_BASELINE1_V2.md` | Median-spot leak — edge was artifact |
+| 2026-04-16 | `GPT_PRO_0DTE_BRIEF.md` | Initial 0DTE research scope |
 
-This is research code, not investment advice. 0DTE options can lose 100% of premium in minutes.
+---
+
+## Risk / disclaimer
+
+Research code, not investment advice. 0DTE options can lose 100% of
+premium in minutes. No position is live.
+
+## License
+
+MIT (see `LICENSE`).
