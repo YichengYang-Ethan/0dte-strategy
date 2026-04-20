@@ -81,9 +81,15 @@ Target: in next 60 minutes, does spot touch call wall, put wall, or neither? (Th
 
 **Question 4**: the volatility result I just produced (V1 ΔR²=0.008 Bonferroni-sig, exploratory flag) — is it scientifically correct to **archive this as a legitimate finding on a separate branch** even though it's structurally unrelated to Joey's bot? It may be real, just not what I'm trying to build. Or do I kill it because continuing to work on a short-vol result while claiming to rebuild Joey's long-gamma bot is the same self-deception that got me here?
 
-**Question 5**: I will have lunch with Joey soon. What are the minimum 5 questions I have to ask him so the rebuild is anchored in his actual parameters instead of my inferred parameters? Not "what's your secret sauce" style, but specific enough that I can code against the answer.
+**Question 5**: I am **not going to ask Joey for more details**. I will rebuild entirely from the transcript extracts above + public literature + my own inference. Given I cannot ask him clarifying questions, what are the highest-leverage ambiguities in his spec that I have to *decide for myself* before R1? Specifically:
+- Wall definition (single-strike argmax vs top-3 vs kernel-smoothed mode)
+- Vanna aggregation (per-strike sum vs OI-weighted vs flow-weighted)
+- "IV spike" operational definition (ATM IV absolute z, or IV change z, or vol-of-vol?)
+- Event trigger confirmation logic (one trigger fires → enter, or two-of-three confluence?)
+- Price-target prediction method (regression on structure features, or rule-based geometry: "spot → nearest wall")
+For each, pick the version **most consistent with his transcript evidence** even if ambiguous, and justify.
 
-**Question 6**: is there any scenario where the honest answer is "Joey's edge is probably partially overstated; rebuild to his spec and you'll get a Sharpe 0.5 bot not a Sharpe 3 bot"? If yes, what's the early detection signal (in R1-R4) that lets me kill this at cost before R5 grid search?
+**Question 6**: is there any scenario where the honest answer is "Joey's edge is probably partially overstated; rebuild to his spec and you'll get a Sharpe 0.5 bot not a Sharpe 3 bot"? If yes, what's the early detection signal (in R1-R4) that lets me kill this at cost before R5 grid search? Since I cannot validate against Joey himself, this early-kill criterion is critical — it's my only defense against 5 more days of work on a 0.3-Sharpe lookalike.
 
 ## What I want back
 
@@ -91,7 +97,7 @@ Target: in next 60 minutes, does spot touch call wall, put wall, or neither? (Th
 - Concrete correction on target formulation (Q2).
 - Pre-registration design for rule-based + grid search (Q3).
 - What to do with the live volatility finding (Q4).
-- Minimum-5 questions for lunch with Joey (Q5).
+- Resolution of 5 ambiguities in Joey's spec that I have to decide unilaterally (Q5).
 - Early-kill criterion if Joey's edge is overstated (Q6).
 
-I need the brutal version. If you think the right answer is "stop trying to clone Joey, build your own thing from the short-vol result," say so. If you think the right answer is "you can't do this without L2 realtime WS data; Theta Data parquet fundamentally can't reproduce Joey's bot," say that too. I will stop spending if that's the verdict.
+I need the brutal version. **I am not asking Joey any more questions** — the rebuild must work from his transcript + public literature + my own inference, or not at all. If you think the right answer is "stop trying to clone Joey, build your own thing from the short-vol result," say so. If you think the right answer is "you can't do this without L2 realtime WS data; Theta Data parquet fundamentally can't reproduce Joey's bot," say that too. I will stop spending if that's the verdict.
