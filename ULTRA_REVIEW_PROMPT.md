@@ -162,34 +162,9 @@ This is the existential layer.
    research"?** What would that look like economically — short
    straddle wrapper with 5% friction, can it clear Sharpe 1?
 
-### Layer 4: Career/life-level framing
-
-This is awkward but real. I have:
-- 1 month sunk into this, more planned
-- Opportunity cost: not prepping for Summer 2026 Chicago quant
-  interviews, not doing LeetCode
-- F1 status: realistically, US quant job post-graduation is harder
-  post-2024 political shifts — some returning-to-China path is
-  already in the memo
-- Ultra Review is not free
-- My friend Joey is also grinding live trades while I do research
-
-Questions:
-1. **Is this project worth 10 more days of focused work?** Or is
-   the right answer to kill it and redirect to interview prep?
-2. **What's the value to a quant hiring manager** of a 10-day
-   R0-through-R5 rebuild that passes all kill gates vs one that
-   fails at R3? vs continuing the short-vol finding and writing it
-   up as a clean research project?
-3. **What signal does a hiring manager actually care about** in
-   this repo — the falsification trail? The leak-safe primitives?
-   The fact I survived 4 rounds of external review without giving
-   up? The R0 pre-registration discipline? Or none of it, and this
-   is a hobby project that doesn't translate?
-
 ## Format of the answer I want
 
-- **One-sentence verdict** per layer (4 verdicts).
+- **One-sentence verdict** per layer (3 verdicts).
 - **Ranked list of 5 concrete changes** to `ARCHITECTURE_JOEY_REBUILD.md`
   if Layer 1 is salvageable.
 - **Kill-or-continue** call with explicit reasoning — don't hedge.
