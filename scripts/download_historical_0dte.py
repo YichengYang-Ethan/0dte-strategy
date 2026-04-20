@@ -31,8 +31,10 @@ import httpx
 import pandas as pd
 
 REST_BASE = "http://127.0.0.1:25503/v3"
-CONCURRENCY = 6  # Pro tier allows 8; stay under
+CONCURRENCY = 4  # Pro tier allows 8; stay further under to avoid Terminal wedge
 DATA_DIR = Path("data/historical_0dte")
+# Auto-pause if Terminal health fails N consecutive days
+CONSEC_FAIL_THRESHOLD = 3
 logger = logging.getLogger("downloader")
 
 
@@ -179,15 +181,34 @@ async def download_contract(
     return results
 
 
+def day_is_complete(d: date) -> bool:
+    """True if day's directory has quote/trade/greeks/oi subdirs all non-empty."""
+    day_dir = DATA_DIR / f"date={d.strftime('%Y-%m-%d')}"
+    if not day_dir.exists():
+        return False
+    for ds in ("quote", "trade", "greeks", "oi"):
+        sub = day_dir / ds
+        if not sub.exists() or not any(sub.glob("*.parquet")):
+            return False
+    return True
+
+
 async def download_day(client: httpx.AsyncClient, d: date, band_pct: float) -> dict:
     logger.info(f"=== {d} ===")
+    if day_is_complete(d):
+        logger.info(f"  already complete, skip")
+        return {"date": d, "contracts": 0, "quote": 0, "trade": 0, "greeks": 0, "oi": 0, "elapsed_sec": 0.0, "status": "skipped"}
     contracts = await list_contracts(client, d)
     logger.info(f"  0DTE contracts total: {len(contracts)}")
 
     spot = await get_spot(client, d)
     if spot is None:
+        # 0 contracts = market holiday. Clean skip, do NOT count as failure.
+        if contracts.empty:
+            logger.info(f"  market holiday (0 contracts), skip")
+            return {"date": d, "contracts": 0, "quote": 0, "trade": 0, "greeks": 0, "oi": 0, "elapsed_sec": 0.0, "status": "holiday"}
         logger.error(f"  {d}: cannot determine SPX spot, skip")
-        return {"date": d, "contracts": 0, "quote": 0, "trade": 0, "greeks": 0, "oi": 0, "elapsed_sec": 0.0}
+        return {"date": d, "contracts": 0, "quote": 0, "trade": 0, "greeks": 0, "oi": 0, "elapsed_sec": 0.0, "status": "spot_fail"}
     logger.info(f"  SPX spot ~{spot:.2f}")
 
     band_lo = spot * (1 - band_pct / 100)
@@ -228,6 +249,7 @@ async def main():
 
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     summary = []
+    consec_failures = 0
 
     async with httpx.AsyncClient() as client:
         d = start
@@ -236,8 +258,26 @@ async def main():
                 try:
                     res = await download_day(client, d, args.band_pct)
                     summary.append(res)
+                    # Reset failure counter on successful non-skip day
+                    status = res.get("status", "")
+                    if res.get("contracts", 0) > 0 and res.get("quote", 0) > 0:
+                        consec_failures = 0
+                    elif status in ("skipped", "holiday"):
+                        pass  # legitimate skip, does NOT count as failure
+                    else:
+                        # Only real failures (Terminal wedged, spot_fail on trading day) count
+                        consec_failures += 1
                 except Exception as e:
                     logger.error(f"  {d}: {e}")
+                    consec_failures += 1
+
+                # Kill switch: Terminal wedged
+                if consec_failures >= CONSEC_FAIL_THRESHOLD:
+                    logger.error(
+                        f"{consec_failures} consecutive failures — Terminal likely wedged. "
+                        f"Stopping. Restart Terminal and rerun same command to resume."
+                    )
+                    break
             d += timedelta(days=1)
 
     logger.info("=" * 60)
