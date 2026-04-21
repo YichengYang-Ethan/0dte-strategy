@@ -1,0 +1,177 @@
+{
+  "n_ext_oos": 719,
+  "n_orig_oos": 117,
+  "base_rate_ext_oos": 0.0306,
+  "base_rate_orig_oos": 0.0513,
+  "pass_single_threshold": 0.065,
+  "pass_conj_threshold": 0.098,
+  "features": {
+    "GEX_state": {
+      "ext_oos": {
+        "neg": {
+          "hit_rate": 0.0333,
+          "n": 330
+        },
+        "pos": {
+          "hit_rate": 0.0283,
+          "n": 389
+        }
+      },
+      "orig_oos": {
+        "neg": {
+          "hit_rate": 0.0,
+          "n": 32
+        },
+        "pos": {
+          "hit_rate": 0.0706,
+          "n": 85
+        }
+      }
+    },
+    "pos_in_range": {
+      "ext_oos": {
+        "high": {
+          "hit_rate": 0.0361,
+          "n": 166
+        },
+        "low": {
+          "hit_rate": 0.0192,
+          "n": 104
+        },
+        "mid": {
+          "hit_rate": 0.027,
+          "n": 445
+        }
+      },
+      "orig_oos": {
+        "high": {
+          "hit_rate": 0.1,
+          "n": 40
+        },
+        "low": {
+          "hit_rate": 0.0,
+          "n": 8
+        },
+        "mid": {
+          "hit_rate": 0.029,
+          "n": 69
+        }
+      }
+    },
+    "flow_sign": {
+      "ext_oos": {
+        "neg": {
+          "hit_rate": 0.0322,
+          "n": 373
+        },
+        "pos": {
+          "hit_rate": 0.029,
+          "n": 345
+        }
+      },
+      "orig_oos": {
+        "neg": {
+          "hit_rate": 0.0741,
+          "n": 54
+        },
+        "pos": {
+          "hit_rate": 0.0317,
+          "n": 63
+        }
+      }
+    },
+    "ATM_IV": {
+      "ext_oos": {
+        "high": {
+          "hit_rate": 0.0336,
+          "n": 268
+        },
+        "low": {
+          "hit_rate": 0.0293,
+          "n": 205
+        },
+        "mid": {
+          "hit_rate": 0.0286,
+          "n": 245
+        }
+      },
+      "orig_oos": {
+        "high": {
+          "hit_rate": 0.0909,
+          "n": 11
+        },
+        "low": {
+          "hit_rate": 0.0533,
+          "n": 75
+        },
+        "mid": {
+          "hit_rate": 0.0323,
+          "n": 31
+        }
+      }
+    },
+    "overnight_gap": {
+      "ext_oos": {
+        "flat": {
+          "hit_rate": 0.0361,
+          "n": 332
+        },
+        "gap_down": {
+          "hit_rate": 0.0172,
+          "n": 174
+        },
+        "gap_up": {
+          "hit_rate": 0.033,
+          "n": 212
+        }
+      },
+      "orig_oos": {
+        "flat": {
+          "hit_rate": 0.0448,
+          "n": 67
+        },
+        "gap_down": {
+          "hit_rate": 0.0,
+          "n": 17
+        },
+        "gap_up": {
+          "hit_rate": 0.0909,
+          "n": 33
+        }
+      }
+    },
+    "VIX_proxy": {
+      "ext_oos": {
+        "high": {
+          "hit_rate": 0.0364,
+          "n": 247
+        },
+        "low": {
+          "hit_rate": 0.0349,
+          "n": 229
+        },
+        "mid": {
+          "hit_rate": 0.0216,
+          "n": 232
+        }
+      },
+      "orig_oos": {
+        "high": {
+          "hit_rate": 0.0,
+          "n": 18
+        },
+        "low": {
+          "hit_rate": 0.0714,
+          "n": 56
+        },
+        "mid": {
+          "hit_rate": 0.0465,
+          "n": 43
+        }
+      }
+    }
+  },
+  "passing_features": [],
+  "any_single_pass": false,
+  "verdict": "FAIL"
+}

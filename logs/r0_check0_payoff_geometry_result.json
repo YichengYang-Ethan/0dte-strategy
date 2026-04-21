@@ -1,0 +1,25 @@
+{
+  "n_days": 951,
+  "params": {
+    "target_delta": 0.2,
+    "entry_min": 585,
+    "hold_minutes": 60,
+    "target_mult": 4.0,
+    "stop_mult": 0.6,
+    "entry": "ask",
+    "exit": "bid at target, stop price at stop, bid at timeout"
+  },
+  "outcome_rates": {
+    "STOP_HIT": 0.6519,
+    "TIMEOUT": 0.3155,
+    "TARGET_HIT": 0.0326
+  },
+  "target_before_stop_hit_rate": 0.0326,
+  "stop_before_target_hit_rate": 0.6519,
+  "top3_month_concentration": 0.226,
+  "kill_triggered": false,
+  "kill_reason": null,
+  "mean_pnl_pct": 0.0325,
+  "median_pnl_pct": -0.4,
+  "mean_mins_to_exit": 34.9
+}

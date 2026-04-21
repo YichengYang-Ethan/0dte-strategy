@@ -1,0 +1,17 @@
+{
+  "days_usable": 947,
+  "base_rate_retrospective_weak": 0.181,
+  "base_rate_prospective_weak": 0.202,
+  "confusion": {
+    "tp": 65,
+    "fp": 126,
+    "fn": 106,
+    "tn": 650
+  },
+  "precision": 0.34,
+  "recall": 0.38,
+  "f1": 0.359,
+  "accuracy": 0.755,
+  "kill_triggered": true,
+  "kill_reason": "precision 0.34 < 0.55"
+}

@@ -1,0 +1,107 @@
+{
+  "n_days_total": 952,
+  "entry_time_et": "14:30",
+  "label_time_et": "15:55",
+  "by_bucket": {
+    "ORIG_IS": {
+      "N": 115,
+      "T_spot": {
+        "n": 115,
+        "mae": 13.619,
+        "median_ae": 10.82
+      },
+      "T1": {
+        "n": 115,
+        "mae": 15.565,
+        "median_ae": 12.97
+      },
+      "T2": {
+        "n": 114,
+        "mae": 15.285,
+        "median_ae": 11.042
+      },
+      "T_disc": {
+        "n": 115,
+        "mae": 17.316,
+        "median_ae": 13.68
+      }
+    },
+    "ORIG_OOS": {
+      "N": 117,
+      "T_spot": {
+        "n": 117,
+        "mae": 9.826,
+        "median_ae": 7.21
+      },
+      "T1": {
+        "n": 117,
+        "mae": 13.006,
+        "median_ae": 10.78
+      },
+      "T2": {
+        "n": 116,
+        "mae": 11.038,
+        "median_ae": 8.29
+      },
+      "T_disc": {
+        "n": 117,
+        "mae": 13.969,
+        "median_ae": 11.2
+      }
+    },
+    "EXT_OOS": {
+      "N": 720,
+      "T_spot": {
+        "n": 720,
+        "mae": 10.959,
+        "median_ae": 7.19
+      },
+      "T1": {
+        "n": 720,
+        "mae": 15.462,
+        "median_ae": 10.98
+      },
+      "T2": {
+        "n": 694,
+        "mae": 12.76,
+        "median_ae": 8.789
+      },
+      "T_disc": {
+        "n": 720,
+        "mae": 16.229,
+        "median_ae": 11.57
+      }
+    },
+    "ALL": {
+      "N": 952,
+      "T_spot": {
+        "n": 952,
+        "mae": 11.141,
+        "median_ae": 7.575
+      },
+      "T1": {
+        "n": 952,
+        "mae": 15.172,
+        "median_ae": 11.16
+      },
+      "T2": {
+        "n": 924,
+        "mae": 12.855,
+        "median_ae": 9.004
+      },
+      "T_disc": {
+        "n": 952,
+        "mae": 16.082,
+        "median_ae": 11.595
+      }
+    }
+  },
+  "verdicts": {
+    "T1": "FAIL (-36.2% worse than T_spot)",
+    "T2": "FAIL (-15.4% worse than T_spot)",
+    "T_disc": "FAIL (-44.3% worse than T_spot)"
+  },
+  "any_pass": false,
+  "any_marginal": false,
+  "kill_triggered": true
+}
