@@ -1,7 +1,7 @@
 """V4: Weak-trend prospective identification test.
 
-Tests the load-bearing claim in docs/strategy_delta_vs_joey.md §5:
-   "weak-trend no-trade is free alpha because Joey's BE WR there is 58%"
+Tests the load-bearing claim in docs/strategy_delta_vs_peer.md §5:
+   "weak-trend no-trade is free alpha because the reference operator's BE WR there is 58%"
 
 That claim requires the regime classifier to label weak-trend days
 *prospectively at 10:00 ET*, not retrospectively. If prospective
@@ -19,7 +19,7 @@ Procedure:
   4. Report agreement matrix, precision, recall, F1.
 
 Kill: precision < 55% or recall < 40% — §5 free alpha dies; we delete
-that optimization point from strategy_delta_vs_joey.md.
+that optimization point from strategy_delta_vs_peer.md.
 
 Diagnostic: no new backtest; no new signal; just a label agreement test.
 """
@@ -182,7 +182,7 @@ def main() -> int:
 
     if kill:
         print("\nKILL: §5 (weak-trend no-trade) free-alpha claim must be "
-              "removed from strategy_delta_vs_joey.md.")
+              "removed from strategy_delta_vs_peer.md.")
     else:
         print("\nPASS: prospective classifier viable for §5 gate. "
               "Proceed to R3 regime filter implementation (post-check).")

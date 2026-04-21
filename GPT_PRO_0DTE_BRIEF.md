@@ -21,7 +21,7 @@ Relevant literature: Barbon & Buraschi "Gamma Fragility" (SSRN 3725454). Adams/F
 ## Production reference — actual implementation
 
 - **Platform**: local Python + moomoo API
-- **Data**: switched from Theta streaming ($80/mo Standard) to massive.com WebSocket ($200/mo) because Theta "often disconnects during live"
+- **Data**: uses L2 websocket provider (approx $200/mo tier)
 - **Asset focus**: SPX index 0DTE primarily; also individual tickers (NVDA, MRVL, NFLX, CRDO, TSLA)
 - **Holding time**:
   - Individual tickers: minutes to ~1 hour (fast moves)

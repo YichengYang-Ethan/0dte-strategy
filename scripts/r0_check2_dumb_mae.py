@@ -8,14 +8,14 @@ Per HANDOFF Action 4 (reordered) + Ultra Review #3:
 Ultra Review kill criterion:
   No target variant beats spot-at-14:30 by ≥10% MAE reduction → kill R0.
 
-Joey-informed variant (2026-04-21, after Ultra Review amendment):
+the reference operator-informed variant (2026-04-21, after Ultra Review amendment):
   T_disc is the NEW primary candidate (argmax over discrete wall
-  set, not continuous barycenter). See ARCHITECTURE_JOEY_REBUILD.md
+  set, not continuous barycenter). See ARCHITECTURE_R0_REBUILD.md
   §1.2 amended.
 
 Four targets evaluated:
   - T_disc:  argmax over {call_wall, put_wall, midwall} of |GEX|
-             (primary candidate — Joey cites integer pin levels)
+             (primary candidate — the reference operator cites integer pin levels)
   - T1:      spot-closer of {call_wall, put_wall}
   - T2:      GEX-weighted barycenter of {call_wall, put_wall}
   - T_spot:  spot-at-14:30  (the dumb baseline)

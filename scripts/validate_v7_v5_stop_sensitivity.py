@@ -6,7 +6,7 @@ NEG_GAMMA + pos<0.15 signal. This is a different payoff structure;
 conclusions from V2 don't transfer automatically.
 
 Test: run v5 backtest under three sl_pct values and compare:
-  - sl_pct = -0.40  (Joey)
+  - sl_pct = -0.40  (the reference operator)
   - sl_pct = -0.50  (current v5 default)
   - sl_pct = -0.60
 on each OOS bucket: ORIG_IS, ORIG_OOS, EXT_OOS, ALL.
@@ -138,7 +138,7 @@ def main() -> int:
         pf_40 = pf_all[-0.40]
         pf_50 = pf_all[-0.50]
         delta = ((pf_40 - pf_50) / pf_50 * 100) if pf_50 else 0
-        print(f"  Joey's sl=-0.40 beats current default on ALL: "
+        print(f"  the reference operator's sl=-0.40 beats current default on ALL: "
               f"PF {pf_40} vs {pf_50} ({delta:+.1f}%).")
         print(f"  Check per-bucket consistency before changing BacktestConfig default.")
     else:

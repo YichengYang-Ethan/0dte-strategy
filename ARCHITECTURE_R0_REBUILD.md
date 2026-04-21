@@ -1,4 +1,4 @@
-# R0 — Architecture: Joey-Inspired 0DTE Reconstruction
+# R0 — Architecture: the reference operator-Inspired 0DTE Reconstruction
 
 **Status:** pre-registration. Frozen 2026-04-20. Any change during R1-R5
 must be logged with date + reason in `CHANGELOG.md`.
@@ -11,10 +11,10 @@ specs unchanged until the pipeline is feature-complete.
 
 ## 0. Mission statement
 
-Reconstruct a Joey-inspired 0DTE trading system from WeChat transcript
+Reconstruct a practitioner-inspired 0DTE trading system from field research transcript
 extracts + public literature + own inference. **Not** a replication —
-transcript does not give code-level spec, and Joey will not be asked
-clarifying questions. The honest claim is **Joey-inspired
+transcript does not give code-level spec, and the reference operator will not be asked
+clarifying questions. The honest claim is **practitioner-inspired
 reconstruction**, not replication.
 
 **Product shape:** rule-based, event-triggered, long-gamma system on
@@ -43,10 +43,10 @@ For each minute-bar t, produce:
 
 > **AMENDED 2026-04-21 per Ultra Review Action 1 + V4 empirical finding.**
 > Added **T_disc** (discrete argmax) as primary candidate. Demoted T2
-> barycenter to robustness variant. Reason: Joey's transcript cites
+> barycenter to robustness variant. Reason: the reference operator's transcript cites
 > integer pin levels (7175, 7126, 7125), not continuous barycenters.
 > A weighted average of two walls produces a number like 7163.4 that
-> Joey's bot would never output — his bot outputs integer strikes
+> the reference operator's bot would never output — the reference bot outputs integer strikes
 > because dealer gamma concentrates there, not at interpolated points.
 >
 > **V4 constraint (2026-04-21):** any target that depends on a regime
@@ -68,7 +68,7 @@ where
   midwall = strike at minimum of sum_side GEX curvature between walls
   persistent_wall_30m = strike held as argmax in ≥60% of last 30 minutes
 ```
-**Rationale:** Joey's bot outputs integer pin levels (7175, 7126) per
+**Rationale:** the reference operator's bot outputs integer pin levels (7175, 7126) per
 transcript. This matches the mechanism: dealer gamma concentrates at
 option strikes, not between them. A continuous barycenter (T2) averages
 away the discrete mass structure.
@@ -90,7 +90,7 @@ where
 ```
 **Kept as comparison point:** if T_disc wins MAE against T2, we have
 evidence for the discrete-pin hypothesis. If T2 wins, the mechanism is
-more distributed than Joey describes and we should honestly report it.
+more distributed than the reference operator describes and we should honestly report it.
 
 **T3 — Flow-adjusted weighted target:**
 ```
@@ -392,10 +392,10 @@ Listed here so they are not forgotten or rationalized later:
   pushing from below toward ATM. Not modeled in T1/T2/T3.
 - **Dealer position sign** — assumed MMs are short from customer
   books. If wrong, vanna sign is inverted.
-- **Massive.com L2** — Joey uses streaming L2; this rebuild uses
+- **Massive.com L2** — the reference operator uses streaming L2; this rebuild uses
   Theta Data historical parquet. Fundamental structural difference;
   tick sequencing may differ.
-- **Price-target specification** — Joey in transcript gives exact
+- **Price-target specification** — the reference operator in transcript gives exact
   integer targets (7175, 7126). This rebuild produces continuous
   T_t. Unknown whether exact-integer pin logic is more predictive.
 - **Search multiplicity** — nominally 405 combinations, but R3 also

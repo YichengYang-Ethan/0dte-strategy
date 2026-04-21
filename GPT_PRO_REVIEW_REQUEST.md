@@ -2,7 +2,7 @@
 
 ## Context
 
-I'm Ethan, a UIUC student building a 0DTE SPY options swing strategy (EOD → next-EOD, 1DTE). I've spent ~10 days + 1 overnight iteration on this. Current status:
+I'm a student building a 0DTE SPY options swing strategy (EOD → next-EOD, 1DTE). I've spent ~10 days + 1 overnight iteration on this. Current status:
 
 - **824 days of SPY option chain data** (2023-01-03 → 2026-04-16), enriched with Theta Data Standard official Greeks + IV + spot
 - **Per-day parquet**, ~1,960 rows each, covering 5 nearest expirations × all strikes
@@ -13,17 +13,17 @@ I'm Ethan, a UIUC student building a 0DTE SPY options swing strategy (EOD → ne
 
 ## The new information
 
-A UIUC friend (Joey) runs a similar-looking 0DTE bot, claimed ~70% WR. I extracted his architecture over WeChat today. Three layers:
+A reference operator runs a similar-looking 0DTE bot, claimed ~70% WR. I extracted the architecture over field research today. Three layers:
 
 1. **Raw features** (I have all 11): GEX total, GEX skew, call-wall, put-wall, ATM IV, Vanna total, bid-ask spread, DTE, volume, price range HLC, order-book L1/L2, symbol blacklist
-2. **Aggregation + combination features** (he has, I don't): *net flow* (aggressor-side signed volume from massive.com WebSocket data, ~$200/mo), plus "hand-picked aggregation windows × combination crosses" he says tuned via grid search on historical weights
-3. **Per-symbol specialization** (he has, I don't): different feature subsets per ticker
+2. **Aggregation + combination features** (reference has, we don't): *net flow* (aggressor-side signed volume from massive.com WebSocket data, ~$200/mo), plus "hand-picked aggregation windows × combination crosses" reportedly tuned via grid search on historical weights
+3. **Per-symbol specialization** (reference has, we don't): different feature subsets per ticker
 
-Joey is NOT a trained quant — he's a CS/Stat undergrad who writes code via GPT and tunes parameters by hand. He has no formal OOS discipline ("要过拟合到什么程度完全看自己把控"). His 70% WR is self-reported, no statistical evidence.
+the reference operator is NOT a trained quant — he's a CS/Stat undergrad who writes code via GPT and tunes parameters by hand. He has no formal OOS discipline ("要过拟合到什么程度完全看自己把控"). His 70% WR is self-reported, no statistical evidence.
 
-### Joey's explicit trading thesis (just revealed)
+### the reference operator's explicit trading thesis (just revealed)
 
-Joey's core thesis is **"MM pinning"**:
+the reference operator's core thesis is **"MM pinning"**:
 - "I basically follow the market maker"
 - "My job is to predict what the market maker will do"
 - "MMs provide liquidity but also want to make money"
@@ -36,7 +36,7 @@ Translated into academic language: **customer OI concentration at a strike → M
 **My concern**: Adams/Fontaine/Ornthanalai (SSRN 4881008, May 2024) used regulatory data and found that **MMs actually MATCH 0DTE customer flow** — net dealer gamma carry is essentially zero most days. The "dealers are short gamma → pinning" narrative may be retail folklore that doesn't hold post-2023 when 0DTE volumes exploded.
 
 **Two-sided question to GPT Pro**:
-1. Is Joey's MM-pinning thesis empirically valid in 2024-2026 SPY 0DTE? Or is Adams 2024 correct that MMs match flow, making this thesis obsolete?
+1. Is the reference operator's MM-pinning thesis empirically valid in 2024-2026 SPY 0DTE? Or is Adams 2024 correct that MMs match flow, making this thesis obsolete?
 2. If the thesis is partially valid, in which market regimes does it still work? My Y2023 failure (PF 0.75-0.91 across all signal modes) might be exactly the "MMs match flow" regime where pinning breaks.
 
 ## What I want to build (v12 candidate)
@@ -48,7 +48,7 @@ I want to borrow his "layer 2" idea (aggregation + cross features) but stay insi
 iv_shock = today_atm_iv - yesterday_atm_iv   # absolute daily IV change
 # Gate: |iv_shock| > 2% AND v5 signal fires → trade
 ```
-Rationale: Joey said "7175 IV 极度暴涨 + gamma 敞口 → target zone". IV is exchange-sourced, low noise, good time-alignment at EOD.
+Rationale: the reference operator said "7175 IV 极度暴涨 + gamma 敞口 → target zone". IV is exchange-sourced, low noise, good time-alignment at EOD.
 
 ### Variant B — Volume/OI turnover skew
 ```python
@@ -81,7 +81,7 @@ flow_skew = Σ oi_delta[call] - Σ oi_delta[put]   # ATM band
    2025-10-17→20: skew -120k, next-day +1.04%
    ```
 3. SPY put OI is structurally > call OI (hedging demand), so skew is always negative — no meaningful zero-crossing.
-4. EOD time resolution cannot capture intraday "dealer flip" that Joey's tick-level data catches.
+4. EOD time resolution cannot capture intraday "dealer flip" that the reference operator's tick-level data catches.
 
 ## Questions I need GPT Pro to answer
 
@@ -95,7 +95,7 @@ Criteria: (a) theoretical grounding in 0DTE microstructure literature, (b) robus
 Given:
 - v5 with a single rule already failed Y2023
 - I have 824 trading days (not huge for rule search)
-- Joey's edge likely comes from (a) $200/mo realtime flow data I can't replicate, (b) years of hand-tuning intuition
+- the reference operator's edge likely comes from (a) $200/mo realtime flow data I can't replicate, (b) years of hand-tuning intuition
 - Bootstrap CIs on existing variants all include PF < 1
 
 Should I instead:
@@ -104,7 +104,7 @@ Should I instead:
 - Accept that 0DTE swing with EOD data is fundamentally under-informed, and go intraday (requires data upgrade ≥ $200/mo)?
 
 ### 4. Walk-forward validation methodology
-Joey does "grid search on historical weights with subjective stopping". I currently do:
+the reference operator does "grid search on historical weights with subjective stopping". I currently do:
 - Fixed-date splits (ORIG_IS/ORIG_OOS/EXT_OOS/Y2023)
 - Bootstrap 1000x resampling for PF CIs
 - 4-tier check that any candidate must beat PF ≥ 1.2 on all 4 buckets

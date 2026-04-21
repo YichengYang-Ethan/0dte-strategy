@@ -1,20 +1,20 @@
-"""V2: Empirical check of Joey's payoff claims (-40% / +300%).
+"""V2: Empirical check of the reference operator's payoff claims (-40% / +300%).
 
-Tests whether Joey's self-reported payoff geometry holds on unconditional
-0.20Δ OTM 0DTE calls across 952 days. This is not a claim that Joey's
+Tests whether the reference operator's self-reported payoff geometry holds on unconditional
+0.20Δ OTM 0DTE calls across 952 days. This is not a claim that the reference operator's
 SIGNAL doesn't beat this baseline — it's a claim that his payoff NUMBERS
 (-40% avg loss, +300% avg win) should be reachable on *some* subset of
 days if the mechanism exists, and that the unconditional distribution
 tells us what's mechanically possible vs what requires edge.
 
 Key question: is "+300% win / -40% loss" even a reachable payoff pair
-on 0.20Δ 0DTE calls held 09:45 → 15:55? Or is Joey cherry-picking from
+on 0.20Δ 0DTE calls held 09:45 → 15:55? Or is the reference operator cherry-picking from
 memory?
 
 Procedure:
   For each of ~952 days:
     1. Pick a call strike such that |delta| ≈ 0.20 at 09:45 ET
-    2. Compute entry fill price (ask @ 09:45 — Joey's method)
+    2. Compute entry fill price (ask @ 09:45 — the reference operator's method)
     3. Walk minute-by-minute from 09:46 to 15:55
     4. Under each stop-rule (none, -40%, -60%, -100%):
          - track running P/L as (current_mid - entry_fill) / entry_fill
@@ -25,12 +25,12 @@ Procedure:
     - loss distribution: median, mean, p10, p90, when side=loss
     - win distribution: median, mean, p10, p90, when side=win
     - win rate per stop-rule
-    - compare to Joey's -40% / +300% claim
+    - compare to the reference operator's -40% / +300% claim
 
 Kill criteria: no "kill" — this is diagnostic. But a strong finding
-(median win < +80% gross) means Joey's +300% is conditional on his
+(median win < +80% gross) means the reference operator's +300% is conditional on his
 signal and NOT an unconditional baseline — which reshapes what
-joey_payoff_model.py represents.
+peer_payoff_model.py represents.
 """
 
 from __future__ import annotations
@@ -121,7 +121,7 @@ def simulate_trade(quote_path: Path) -> dict | None:
     entry_row = df[df["mins"] == ENTRY_HHMM_MIN]
     if entry_row.empty:
         return None
-    entry_fill = float(entry_row["ask"].iloc[0])  # Joey: pay full spread
+    entry_fill = float(entry_row["ask"].iloc[0])  # the reference operator: pay full spread
     if entry_fill <= 0.01:
         return None
 
@@ -216,7 +216,7 @@ def main() -> int:
             "overall": summarize(pnls),
         }
 
-    # Joey comparison
+    # the reference operator comparison
     joey_check = {
         "joey_claim": {"loss_cap": -0.40, "typical_win_gross": +3.00},
         "empirical_at_stop40": {
@@ -230,7 +230,7 @@ def main() -> int:
     }
     summary["joey_comparison"] = joey_check
 
-    print("\n=== V2 Joey payoff empirical ===")
+    print("\n=== V2 the reference operator payoff empirical ===")
     print(json.dumps(summary, indent=2))
 
     out_json = OUT_DIR / "v2_joey_payoff_empirical_result.json"
@@ -245,17 +245,17 @@ def main() -> int:
     print("\n=== Verdict ===")
     jc = joey_check["empirical_at_stop40"]
     if jc["median_win"] is not None and jc["median_win"] < 0.80:
-        print(f"  Joey's +300% typical win is NOT reachable on unconditional "
+        print(f"  the reference operator's +300% typical win is NOT reachable on unconditional "
               f"0.20Δ 0DTE calls. Empirical median win = +{jc['median_win']*100:.1f}%.")
-        print(f"  Implication: Joey's claim is CONDITIONAL on his signal, "
-              f"not unconditional baseline. joey_payoff_model.py's +300% "
+        print(f"  Implication: the reference operator's claim is CONDITIONAL on his signal, "
+              f"not unconditional baseline. peer_payoff_model.py's +300% "
               f"should be flagged as signal-conditional.")
     elif jc["median_win"] is not None and jc["median_win"] < 2.50:
-        print(f"  Joey's +300% is AT THE EDGE of unconditional distribution. "
+        print(f"  the reference operator's +300% is AT THE EDGE of unconditional distribution. "
               f"Empirical median win = +{jc['median_win']*100:.1f}%.")
     else:
         print(f"  Empirical median win = +{jc['median_win']*100:.1f}% — "
-              f"Joey's +300% is plausible as unconditional baseline.")
+              f"the reference operator's +300% is plausible as unconditional baseline.")
 
     return 0
 

@@ -36,8 +36,8 @@ direction:
    V1 atm_gex_skew → realized_var, ΔR² = +0.008 over persistence,
    Bonferroni p = 0.0009. Real but too small to clear short-straddle
    friction.
-4. **Joey-inspired reconstruction** — R0 architecture pre-registered
-   in `ARCHITECTURE_JOEY_REBUILD.md`. Not yet executed.
+4. **practitioner-inspired reconstruction** — R0 architecture pre-registered
+   in `ARCHITECTURE_R0_REBUILD.md`. Not yet executed.
 
 Ultra Review (completed technically, but the ultraplan command had
 container issues on 2026-04-20) returned the following verdict:
@@ -46,7 +46,7 @@ container issues on 2026-04-20) returned the following verdict:
 
 - **Layer 1 (R0 architecture)**: Methodologically disciplined
   scaffolding, but the T1/T2/T3 target formula produces continuous
-  barycenters while Joey's transcript cites integer pin levels
+  barycenters while the reference operator's transcript cites integer pin levels
   (7175, 7126) — and three load-bearing mechanism questions (ES hedge
   venue, pinning asymmetry, MM dealer-sign) are parked in §9 as
   known-unknowns rather than promoted to primary features.
@@ -59,25 +59,25 @@ container issues on 2026-04-20) returned the following verdict:
   volatility exploratory" split was honestly disclosed as
   data-contingent and Bonferroni-12 corrected.
 
-- **Layer 3 (Joey reconstruction viability)**: Transcript +
-  Theta-REST parquet cannot reconstruct Joey's claimed Sharpe 3 —
+- **Layer 3 (practitioner reconstruction viability)**: Transcript +
+  Theta-REST parquet cannot reconstruct the reference operator's claimed Sharpe 3 —
   the L2-WS to 1-min-REST gap is qualitative, not quantitative, for
   an event-triggered "unusual flow before headlines" bot. Honest
   upper bound is Sharpe 0.5-1.0 on whatever residual dealer-pinning
   edge survives minute-bucketed aggregation; that is a different
-  product from what Joey runs.
+  product from what the reference operator runs.
 
 ---
 
 ## Ultra Review — Ranked R0 Changes (5 total)
 
-Before executing any R1-R5 code, `ARCHITECTURE_JOEY_REBUILD.md` must
+Before executing any R1-R5 code, `ARCHITECTURE_R0_REBUILD.md` must
 be amended:
 
 1. **Make the target discrete, not continuous.** Replace T2
    weighted-wall barycenter with `T_disc = argmax` over candidate
    strikes `{call_wall, put_wall, midwall, most-persistent-wall-30min}`
-   weighted by GEX × persistence. Joey's transcript says "pinned to
+   weighted by GEX × persistence. the reference operator's transcript says "pinned to
    7175", not "pinned to 7163.4."
 
 2. **Promote §9 known-unknowns to §2 primary features.** MM
@@ -128,31 +128,31 @@ be amended:
 
 **Correct path**: 3-day pre-check, then decide. Run viability checks
 from change #3 above. If all three pass, amend R0 per #1, #2, #4, #5,
-then run R1-R5. If any check fails, kill the Joey reconstruction
-entirely. Do not pivot to a "lighter Joey" or revive short-vol.
+then run R1-R5. If any check fails, kill the practitioner reconstruction
+entirely. Do not pivot to a "lighter the reference operator" or revive short-vol.
 
 ---
 
 ## This Week — Numbered Actions
 
-0. **DONE 2026-04-20 evening**: Reverse-engineered Joey's live 0DTE bot
-   from WeChat (10 screenshots, 18 data points). Outputs:
-   - `docs/joey_bot_extracted_specs.md` — source of truth for Joey's
+0. **DONE 2026-04-20 evening**: Reverse-engineered the reference operator's live 0DTE bot
+   from field research (18 parameter observations). Outputs:
+   - `docs/peer_bot_extracted_specs.md` — source of truth for the reference operator's
      system parameters (sizing, fill, stops, costs, frequency,
      regime behavior, architectural gaps).
-   - `docs/joey_payoff_model.py` — executable baseline. Run directly
+   - `docs/peer_payoff_model.py` — executable baseline. Run directly
      to print break-even WR by regime. **Weak-trend BE WR = 58.3%.**
-   - `docs/strategy_delta_vs_joey.md` — five concrete optimization
+   - `docs/strategy_delta_vs_peer.md` — five concrete optimization
      points with file paths, pseudocode, and intel-number rationale.
 
    **Benchmarking rule going forward:** R1–R5 validation must report
    performance by regime bucket, and the bar for success on weak-trend
-   days is "better than no-trade," not "better than Joey's PnL" —
-   because Joey likely loses money on weak-trend days himself. Systematic
+   days is "better than no-trade," not "better than the reference operator's PnL" —
+   because the reference operator likely loses money on weak-trend days himself. Systematic
    weak-trend no-trade gate is the single largest free engineering win
-   this intel exposed. See `strategy_delta_vs_joey.md` §5.
+   this intel exposed. See `strategy_delta_vs_peer.md` §5.
 
-1. **Today**: Rewrite `ARCHITECTURE_JOEY_REBUILD.md` §1.2 to add
+1. **Today**: Rewrite `ARCHITECTURE_R0_REBUILD.md` §1.2 to add
    T_disc as the fourth target candidate, demoting T2 barycenter to
    robustness. Single commit before any code.
 
@@ -164,7 +164,7 @@ below for traceability.
 
 2. **Day 2 (was Day 2)**: `scripts/r0_check0_payoff_geometry.py` —
    **NEW, GPT Pro 2026-04-21 recommendation**. Pure pathwise feasibility
-   check. On 952 days of existing 0DTE data, measure whether Joey's
+   check. On 952 days of existing 0DTE data, measure whether the reference operator's
    claimed payoff (+300% gross before −40% stop within 10-60 min hold)
    is mechanically reachable at all. Written and running. Kill if target
    hit rate <3% of days, or >80% concentrated in top-3-months. V2
@@ -184,7 +184,7 @@ below for traceability.
 5. **Day 5 (reordered — was Action 2)**: `scripts/r0_check1_trigger_density.py`.
    Per-trigger firing rate, confluence-score distribution, number of
    days producing ≥1 entry candidate with confluence ≥3. Per GPT Pro
-   Q2.4: Joey's 3-5/day is a sanity bound, NOT a tuning target.
+   Q2.4: the reference operator's 3-5/day is a sanity bound, NOT a tuning target.
    Validation requires future-only utility (check2 MAE or post-entry
    expectancy) to improve monotonically as threshold moves; if only
    trade count changes, cargo cult.
@@ -193,7 +193,7 @@ below for traceability.
    §1, §2, §6, §7, §9 in a single commit with a `CHANGELOG.md`
    entry dated before R1 starts. If any fail, write a post-mortem
    and stop. Do not revive the short-vol branch. Do not pivot to a
-   lighter Joey.
+   lighter the reference operator.
 
 7. **Do NOT touch R1-R5 code** until checks 0/1/2/3 all pass.
 
@@ -202,12 +202,12 @@ below for traceability.
 ## Critical files to read (in order)
 
 1. `README.md` — full project timeline, falsification history
-2. `docs/joey_bot_extracted_specs.md` — Joey's system reverse-engineered (Action 0 output)
-3. `docs/strategy_delta_vs_joey.md` — five optimization points, prioritized
-4. `docs/joey_payoff_model.py` — runnable reference baseline
-5. `ARCHITECTURE_JOEY_REBUILD.md` — R0 pre-registration (NEEDS AMENDMENTS per #1-#5 above)
+2. `docs/peer_bot_extracted_specs.md` — the reference operator's system reverse-engineered (Action 0 output)
+3. `docs/strategy_delta_vs_peer.md` — five optimization points, prioritized
+4. `docs/peer_payoff_model.py` — runnable reference baseline
+5. `ARCHITECTURE_R0_REBUILD.md` — R0 pre-registration (NEEDS AMENDMENTS per #1-#5 above)
 6. `ARCHIVE_SHORT_VOL_BRANCH.md` — why short-vol is archived
-7. `GPT_PRO_REALIGN_JOEY_PATH.md` — most recent external review brief
+7. `GPT_PRO_REALIGN_PATH.md` — most recent external review brief
 8. `logs/intraday_day3_report.md` — direction falsification numbers
 9. `logs/day2_5_diagnostics.md` — where volatility signal surfaced
 10. `src/pipeline/leak_safe.py` — leak-safe primitives (reusable)
@@ -216,11 +216,11 @@ below for traceability.
 
 ## What NOT to do
 
-- **Do not execute R1-R5 as currently written in `ARCHITECTURE_JOEY_REBUILD.md`.**
+- **Do not execute R1-R5 as currently written in `ARCHITECTURE_R0_REBUILD.md`.**
   The target formula is wrong; the known-unknowns are deferred instead of measured.
 - **Do not revive the short-vol branch.** Bonferroni-surviving rounding error.
   Below economic bar after short-straddle friction.
-- **Do not pivot to a "lighter Joey."** Ultra Review explicitly rejects
+- **Do not pivot to a "lighter the reference operator."** Ultra Review explicitly rejects
   sunk-cost softening.
 - **Do not skip the 3-day pre-check.** It exists specifically to answer
   whether R1-R5 can possibly pass before burning 10 days.
@@ -276,9 +276,9 @@ For the next Claude session (new account or otherwise):
 3. Read the "Critical files to read" list above, in order.
 4. Do NOT execute any R1-R5 code.
 5. Current task = Action 1 in "This Week — Numbered Actions":
-   amend `ARCHITECTURE_JOEY_REBUILD.md` per Ultra Review's 5 ranked
+   amend `ARCHITECTURE_R0_REBUILD.md` per Ultra Review's 5 ranked
    changes, starting with §1.2 T_disc addition.
 
-If anything in this document contradicts `ARCHITECTURE_JOEY_REBUILD.md`,
+If anything in this document contradicts `ARCHITECTURE_R0_REBUILD.md`,
 **this document wins** — the architecture doc has not yet been updated
 with Ultra Review's 5 changes. That update is Action 1 of this week.

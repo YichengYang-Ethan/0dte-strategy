@@ -15,7 +15,7 @@ overnight. Results:
 951 days, 0.20Δ OTM call at 09:45 ET:
 - TARGET_HIT (+300% before −40% within 60 min): **3.26%**
 - top-3-month concentration 22.6% (not regime-locked)
-- Joey's payoff mechanically reachable but thin.
+- the reference operator's payoff mechanically reachable but thin.
 
 ### check3 — dealer-sign stability (CLEAN PASS)
 952 days, Lee-Ready signed on single-leg electronic (condition ∈ {0, 18}):
@@ -84,7 +84,7 @@ Three reconciliations (my ranking):
 **Ranking 1 — Momentum-not-pin (Barbon-Buraschi 2021 classic):**
 NEG-gamma dealers produce momentum, not pin. When spot approaches a
 wall, hedging pressure pushes it THROUGH the wall, not back. This
-aligns with why Joey's v5 rule (NEG_GAMMA + pos<0.15 → BULLISH
+aligns with why the reference operator's v5 rule (NEG_GAMMA + pos<0.15 → BULLISH
 long-call) actually works: spot near put-wall in NEG_GAMMA →
 accelerating downward hedge → breaks through → sharp reversal when
 gamma inverts. Wall is an EVENT TRIGGER, not an ATTRACTOR.
@@ -127,11 +127,11 @@ strategy on it.
 - Rebuilding at overnight horizon = literally v5 under a new name.
 - Do NOT endorse A1 as a live option in your answer.
 
-**A2 (Joey-style signal engineering, no target formula):**
+**A2 (practitioner-style signal engineering, no target formula):**
 - Drop target-prediction framing
 - Build confluence-of-features entry rule (GEX state, pos_in_range,
   flow sign, ATM IV, overnight gap, VIX proxy) on raw features
-- Exit at −40% stop or EOD (validated Joey params)
+- Exit at −40% stop or EOD (validated the reference operator params)
 - Closer to what empirically makes money (check0 3.3%, V2 +378%)
 - Risk: textbook curve-fitting exposure; my OOS framework must
   stay strict
@@ -202,13 +202,13 @@ No fluff. No summary. Three answer blocks only.
 
 1. `docs/r0_post_mortem_2026_04_21.md`
 2. `docs/validation_summary_2026_04_21.md`
-3. `docs/joey_bot_extracted_specs.md`
+3. `docs/peer_bot_extracted_specs.md`
 4. `logs/r0_check2_dumb_mae_result.json`
 5. `logs/r0_check2b_grid_sensitivity_result.json`
 6. `logs/r0_check3_dealer_sign_result.json`
 
 Also available if needed:
-- `ARCHITECTURE_JOEY_REBUILD.md` — full R0 spec (now dead)
+- `ARCHITECTURE_R0_REBUILD.md` — full R0 spec (now dead)
 - `logs/r0_check0_payoff_geometry_result.json` — feasibility result
 
 ---

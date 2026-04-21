@@ -1,6 +1,6 @@
 # Independent Validation Plan — Runs in Parallel with GPT Pro Review
 
-**Purpose:** while GPT Pro is falsifying the Joey intel and the 5 free-win
+**Purpose:** while GPT Pro is falsifying the reference-operator intel and the 5 free-win
 claims, run a separate, code-first validation that tests the same claims
 against the 952-day SPXW 0DTE dataset already on disk. This produces
 empirical evidence — not opinion — against which GPT Pro's verdict can
@@ -26,10 +26,10 @@ Before designing this plan I re-read the code:
   Not an intraday 0DTE generator.
 - `src/risk/manager.py` (152 LOC): already has quarter-Kelly, VIX scaling,
   direction penalty, **`max_daily_loss=$500`**, **`max_trades_per_day=5`**,
-  `no_trade_before="09:45"`. My `strategy_delta_vs_joey.md` §1 incorrectly
+  `no_trade_before="09:45"`. My `strategy_delta_vs_peer.md` §1 incorrectly
   claimed we don't have a daily loss cap — we do.
 - `src/backtest/fill_simulator.py` (192 LOC): round-trip spread cost ≈ 57%
-  of full spread. Joey live pays 100%. Our backtest is 43% optimistic.
+  of full spread. the reference operator live pays 100%. Our backtest is 43% optimistic.
 - `src/backtest/engine.py` (713 LOC): hard-coded swing_1dte, no intraday mode.
 - Data: 468,887 parquets, 2022-07-01 to 2026-04-16, including per-strike
   `quote/` directories at minute resolution.
@@ -43,7 +43,7 @@ not implemented.**
 
 ## Validation tasks (ordered, numbered, with kill criteria)
 
-### V1 — Fill simulator calibration against Joey live
+### V1 — Fill simulator calibration against the reference operator live
 
 **File:** `scripts/validate_v1_fill_calibration.py` (new)
 **Effort:** 2 hours
@@ -52,8 +52,8 @@ not implemented.**
 Add two modes to `FillSimulator`:
 ```
 mode="current"      entry=mid+17.5%spread exit=mid-40%spread    # today's default
-mode="joey_live"    entry=ask             exit=bid              # Joey's actual
-mode="resilient"    JoeyFillPolicy.exit_sequence                # what I want to ship
+mode="joey_live"    entry=ask             exit=bid              # the reference operator's actual
+mode="resilient"    the reference operatorFillPolicy.exit_sequence                # what I want to ship
 ```
 
 Run v5 signal on last 118 days (ORIG_OOS) under all 3 modes. Report:
@@ -65,18 +65,18 @@ Run v5 signal on last 118 days (ORIG_OOS) under all 3 modes. Report:
 systematically optimistic and all v5 numbers upstream need a footnote.
 
 **Expected finding:** `joey_live` is 15–25% worse than `current` on PF. If
-smaller, our backtest was actually closer to Joey than I thought. If larger,
+smaller, our backtest was actually closer to the reference operator than I thought. If larger,
 v5's 4-tier validation was measuring a fill-advantage we don't have live.
 
 ---
 
-### V2 — Joey payoff model sanity check on real data
+### V2 — the reference operator payoff model sanity check on real data
 
-**File:** `scripts/validate_v2_joey_payoff_empirical.py` (new)
+**File:** `scripts/validate_v2_payoff_empirical.py` (new)
 **Effort:** 3 hours
 **Data:** 952-day quotes
 
-`docs/joey_payoff_model.py` claims:
+`docs/peer_payoff_model.py` claims:
 - loss = −40% of premium (hard stop)
 - typical win = +300% gross
 - break-even WR by regime in `summary_table()`
@@ -86,16 +86,16 @@ Build a **model-free trade simulator** that:
 2. For each of 952 days, records simulated loss % and win % at different
    stop levels: none, −40%, −60%, −100% (i.e. hold to expiry)
 3. Fits empirical distribution `loss_pct | side=loss` and `win_pct | side=win`
-4. Compares empirical to Joey's claim (−40% / +300%)
+4. Compares empirical to the reference operator's claim (−40% / +300%)
 
-**Kill:** if empirical median win < +150% gross, Joey's +300% is either
-(a) conditional on his specific signal (in which case it's not
+**Kill:** if empirical median win < +150% gross, the reference operator's +300% is either
+(a) conditional on the reference signal (in which case it's not
 our baseline), (b) survivorship memory, or (c) per-contract cherrypicking.
-Either way the `joey_payoff_model.py` numbers need adjustment.
+Either way the `peer_payoff_model.py` numbers need adjustment.
 
 **Expected finding:** empirical median win is probably +80–150% on
 **unconditional** 0.20Δ 0DTE call, with fat right tail extending to
-+500%+. Joey's +300% is likely the conditional-on-his-signal number,
++500%+. the reference operator's +300% is likely the conditional-on-his-signal number,
 which is fine — but it means we can't use +300% as an unconditional
 baseline.
 
@@ -107,7 +107,7 @@ baseline.
 **Effort:** 1 hour
 **Data:** 952-day quotes
 
-Joey intel #17: "no signals in first 15 min".
+reference-operator intel #17: "no signals in first 15 min".
 
 Compute per-minute GEX + wall stability on first 30 minutes of each day.
 Report:
@@ -116,10 +116,10 @@ Report:
 - 10:00+ variance
 
 **Kill:** if 09:30–09:45 variance is NOT significantly higher than
-10:00+, Joey's 15-min filter is cargo-culted and we should not copy.
+10:00+, the reference operator's 15-min filter is cargo-culted and we should not copy.
 
 **Expected finding:** 09:30 walls are noisy because spot + OI settle
-slowly post-open. Joey's rule is probably empirically sound. This
+slowly post-open. the reference operator's rule is probably empirically sound. This
 validates copying it to our intraday generator.
 
 ---
@@ -130,7 +130,7 @@ validates copying it to our intraday generator.
 **Effort:** 4 hours
 **Data:** 952-day quotes + daily OHLC
 
-This directly tests the "free alpha" claim in `strategy_delta_vs_joey.md` §5.
+This directly tests the "free alpha" claim in `strategy_delta_vs_peer.md` §5.
 
 Build two regime classifiers:
 - **Retrospective:** label day as `weak_trend` if `(high_full_day − low_full_day) / vwap < 0.6 × ATR20`
@@ -151,7 +151,7 @@ precision/recall). This lets us ship a weak-trend gate with controlled
 false-negative rate.
 
 **Critical:** this is the single most important validation task.
-If V4 fails, `strategy_delta_vs_joey.md` §5 is deleted entirely.
+If V4 fails, `strategy_delta_vs_peer.md` §5 is deleted entirely.
 
 ---
 
@@ -164,7 +164,7 @@ If V4 fails, `strategy_delta_vs_joey.md` §5 is deleted entirely.
 This is essentially HANDOFF Action 2 (`r0_check1_trigger_density.py`) but
 slightly different in scope: **use the CURRENT generator's rule** (v5
 NEG_GAMMA + pos<0.15 BULLISH) instead of R0's unwritten trigger primitives.
-Goal: see how close v5 already is to Joey's 3–5/day baseline.
+Goal: see how close v5 already is to the reference operator's 3–5/day baseline.
 
 Compute per-day entry count. Report:
 - Median entries/day
@@ -182,7 +182,7 @@ not just v5 reimplemented at minute resolution.
 
 ---
 
-### V6 — Joey's −40% stop empirical distribution
+### V6 — the reference operator's −40% stop empirical distribution
 
 **File:** `scripts/validate_v6_stop_distribution.py` (new)
 **Effort:** 2 hours
@@ -195,7 +195,7 @@ For every v5 signal in the last 232 days (original IS+OOS), record
 - Of those, avg PF with −40% stop vs no stop
 
 **Kill:** none — diagnostic only. But a strong finding ("−40% stops
-out 35% of eventual winners") means Joey's stop rule is regime-specific,
+out 35% of eventual winners") means the reference operator's stop rule is regime-specific,
 probably overfit to 2025–2026, and we should NOT copy it uniformly.
 
 ---
@@ -216,14 +216,14 @@ GPT Pro review which takes 1 day wall-clock.
 
 1. **Day 1 morning**: paste `gpt_pro_brief_2026_04_20.md` into GPT Pro.
    While waiting: start V4 (weak-trend prospective). This is the load-bearing
-   validation — if it fails, §5 of `strategy_delta_vs_joey.md` dies regardless
+   validation — if it fails, §5 of `strategy_delta_vs_peer.md` dies regardless
    of GPT Pro's answer.
 2. **Day 1 afternoon**: V1 + V3 in parallel.
 3. **Day 1 evening**: read GPT Pro response; cross-check against V1/V3/V4
    findings. Write brief reconciliation doc noting where data disagrees with
    theory.
 4. **Day 2**: V2 + V5 + V6. Decide final shape of amendments to
-   `strategy_delta_vs_joey.md` and `ARCHITECTURE_JOEY_REBUILD.md`.
+   `strategy_delta_vs_peer.md` and `ARCHITECTURE_R0_REBUILD.md`.
 5. **Day 3**: HANDOFF.md Action 1 (T_disc amendment) using all accumulated
    evidence — GPT Pro + V1-V6 combined.
 
@@ -235,16 +235,16 @@ GPT Pro review which takes 1 day wall-clock.
 - Does not download new data
 - Does not upgrade data providers
 - Does not rewrite `fill_simulator.py` (calibration only; the
-  `JoeyFillPolicy` / `ResilientFillPolicy` classes live under `POST-CHECK` gate)
+  `the reference operatorFillPolicy` / `ResilientFillPolicy` classes live under `POST-CHECK` gate)
 
 ## Exit criteria for this plan
 
 After V1–V6 + GPT Pro response, I should have a one-page
 `docs/validation_summary_2026_04_21.md` with:
-- Joey claims that survived empirical + theoretical review → baseline accepted
-- Joey claims killed by data → removed from `joey_payoff_model.py`
+- the reference operator claims that survived empirical + theoretical review → baseline accepted
+- the reference operator claims killed by data → removed from `peer_payoff_model.py`
 - Strategy-delta items that survived → promoted to R3–R5 scope
-- Strategy-delta items killed → deleted from `strategy_delta_vs_joey.md`
+- Strategy-delta items killed → deleted from `strategy_delta_vs_peer.md`
 
 Only then do I touch HANDOFF Action 1 (T_disc amendment).
 
@@ -253,7 +253,7 @@ Only then do I touch HANDOFF Action 1 (T_disc amendment).
 ## Reference
 
 - GPT Pro brief: `docs/gpt_pro_brief_2026_04_20.md`
-- Joey intel source: `docs/joey_bot_extracted_specs.md`
-- Joey payoff model: `docs/joey_payoff_model.py`
-- Optimization map: `docs/strategy_delta_vs_joey.md`
+- reference-operator intel source: `docs/peer_bot_extracted_specs.md`
+- the reference operator payoff model: `docs/peer_payoff_model.py`
+- Optimization map: `docs/strategy_delta_vs_peer.md`
 - Session plan: `HANDOFF.md`

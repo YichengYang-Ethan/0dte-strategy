@@ -2,7 +2,7 @@
 
 Inserted BEFORE the three existing R0 pre-checks (check1/2/3) because
 GPT Pro's Q3 verdict identified this as the most load-bearing prior
-question: can Joey's claimed payoff (+300% gross before -40% stop within
+question: can the reference operator's claimed payoff (+300% gross before -40% stop within
 10-60 min hold) even be mechanically reached on our data, unconditionally?
 
 If the target-before-stop hit rate is too sparse or regime-unstable, the
@@ -10,13 +10,13 @@ entire R0 direction is unsupported and R1-R5 should not proceed.
 
 Complements V2: V2 measured end-of-day bid exits at 15:55. This script
 measures intraday hit-rate of +300% TARGET BEFORE -40% STOP within
-Joey's stated 10-60 minute holding window. Different question; both
+the reference operator's stated 10-60 minute holding window. Different question; both
 needed.
 
 Procedure:
   For each of ~952 days:
-    1. Pick 0.20Δ OTM call at 09:45 (match Joey premium universe)
-    2. Compute entry fill = ask at 09:45 (Joey fill convention)
+    1. Pick 0.20Δ OTM call at 09:45 (match the reference operator premium universe)
+    2. Compute entry fill = ask at 09:45 (the reference operator fill convention)
     3. Walk minute path for 60 minutes (or until 15:55, whichever first)
     4. Record first event:
         TARGET_HIT  if bid >= entry * 4.00 (+300% gross)
@@ -29,7 +29,7 @@ Per-day outcome recorded; aggregate over all 952 days.
 Kill criteria (pre-registered, GPT Pro):
   - TARGET_HIT rate < 3% of days → payoff geometry not reachable unconditionally
   - TARGET_HIT rate concentrated on single regime (>80% on squeeze-only)
-    → Joey's payoff is regime-conditional, not a usable baseline
+    → the reference operator's payoff is regime-conditional, not a usable baseline
 
 Diagnostic output includes:
   - Overall hit rate surface
@@ -239,10 +239,10 @@ def main() -> int:
         print(f"\nKILL: target +{int((TARGET_MULT-1)*100)}% before stop "
               f"{int((STOP_MULT-1)*100)}% within {HOLD_MINUTES}min only "
               f"reachable on {target_hit_rate*100:.1f}% of days. "
-              f"Joey's payoff geometry is not supported unconditionally.")
+              f"the reference operator's payoff geometry is not supported unconditionally.")
     elif kill_regime:
         print(f"\nKILL: target hits cluster {concentration*100:.0f}% in 3 "
-              f"months. Joey's payoff is regime-locked, not generalizable.")
+              f"months. the reference operator's payoff is regime-locked, not generalizable.")
     else:
         print(f"\nPASS: target reachable on {target_hit_rate*100:.1f}% of "
               f"days, distributed across the sample. R0 payoff geometry "

@@ -3,9 +3,9 @@
 Research and implementation of SPX 0DTE options strategies, with a long
 archival trail of prior attempts.
 
-**Current direction:** Joey-inspired reconstruction (rule-based,
+**Current direction:** practitioner-inspired reconstruction (rule-based,
 event-triggered, long-gamma, target-price engine). See
-[`ARCHITECTURE_JOEY_REBUILD.md`](ARCHITECTURE_JOEY_REBUILD.md) for the
+[`ARCHITECTURE_R0_REBUILD.md`](ARCHITECTURE_R0_REBUILD.md) for the
 active R0 spec.
 
 ---
@@ -14,7 +14,7 @@ active R0 spec.
 
 | Phase | Status | Ref |
 |-------|--------|-----|
-| **Joey-inspired reconstruction (R0 architecture)** | **active** | `ARCHITECTURE_JOEY_REBUILD.md` |
+| **practitioner-inspired reconstruction (R0 architecture)** | **active** | `ARCHITECTURE_R0_REBUILD.md` |
 | Short-vol exploratory branch | archived | `ARCHIVE_SHORT_VOL_BRANCH.md` |
 | Intraday 5-day MVP (direction-first) | falsified | `logs/intraday_day3_report.md` |
 | Daily/overnight baselines M1-M4 | falsified | `GPT_PRO_M4_FALSIFICATION_COMPLETE.md` |
@@ -26,19 +26,19 @@ if it isn't in the active row, it's dead or on a branch.
 
 ---
 
-## Active phase: Joey reconstruction
+## Active phase: practitioner reconstruction
 
 ### What it is
 
-A rule-based SPX 0DTE trading system reconstructed from a WeChat
-transcript with a friend ("Joey") who runs a live bot. **Not a
-replication** — transcript doesn't give code-level spec and Joey won't
-be asked for clarifications. Honest framing is **Joey-inspired
+A rule-based SPX 0DTE trading system reconstructed from a field research
+transcript with a friend ("the reference operator") who runs a live bot. **Not a
+replication** — transcript doesn't give code-level spec and the reference operator won't
+be asked for clarifications. Honest framing is **practitioner-inspired
 reconstruction from transcript + public literature + own inference**.
 
 ### What's different from the prior work
 
-| Axis | Prior attempt | Joey rebuild |
+| Axis | Prior attempt | practitioner rebuild |
 |------|---------------|-------------|
 | direction | tried short-vol; tried regression | **long gamma** (buy ATM call/put/butterfly) |
 | entry timing | fixed 15:00 ET decision | **event / structure triggered**, minute resolution |
@@ -51,7 +51,7 @@ reconstruction from transcript + public literature + own inference**.
 ### Stages
 
 Five stages, each with a pre-declared kill gate (see
-`ARCHITECTURE_JOEY_REBUILD.md` §6):
+`ARCHITECTURE_R0_REBUILD.md` §6):
 
 - **R1** — Vanna pipeline (bucketed by expiry, dealer-signed OI-weighted)
 - **R2** — Structural features (call/put walls, IV spike, abnormal flow)
@@ -69,7 +69,7 @@ Total: ~10 days, stop-don't-rationalize at every gate.
 
 A statistically significant finding that `atm_gex_skew` predicts
 intraday realized variance compression (matches Dim-Eraker-Vilkov
-2024). **Not the active path** — structurally unrelated to Joey's
+2024). **Not the active path** — structurally unrelated to the reference operator's
 long-gamma bot. Full details: `ARCHIVE_SHORT_VOL_BRANCH.md`.
 
 - Tag: `v2-short-vol-exploratory-archive`
@@ -99,7 +99,7 @@ Archived in favor of intraday.
   for future live trading. Delayed SPY $711 as of 2026-04-20.
 
 Not used (but flagged):
-- Massive.com L2 websocket ($200/mo) — Joey's data source. Current
+- Massive.com L2 websocket ($200/mo) — the reference operator's data source. Current
   Massive docs expose NBBO but no documented options L2 depth. Theta
   Data historical is sufficient for research stage.
 
@@ -108,7 +108,7 @@ Not used (but flagged):
 ## Repo layout
 
 ```
-ARCHITECTURE_JOEY_REBUILD.md   ← R0 pre-registration (active)
+ARCHITECTURE_R0_REBUILD.md   ← R0 pre-registration (active)
 ARCHIVE_SHORT_VOL_BRANCH.md    ← what's in the short-vol archive
 
 src/pipeline/
@@ -123,7 +123,7 @@ scripts/                       ← one-shot analyses per stage
 
 data/
 ├── historical_0dte/           ← 952 days Theta Data parquets (16 GB, gitignored)
-├── intraday_labels.parquet    ← reusable for Joey rebuild
+├── intraday_labels.parquet    ← reusable for practitioner rebuild
 └── intraday_features.parquet  ← archive
 
 logs/                          ← per-stage reports
@@ -139,7 +139,7 @@ set preserved in repo root; newest first:
 
 | Date | Brief | Verdict topic |
 |------|-------|---------------|
-| 2026-04-20 | `GPT_PRO_REALIGN_JOEY_PATH.md` | Am I on Joey's path or drifting? |
+| 2026-04-20 | `GPT_PRO_REALIGN_PATH.md` | Am I on the reference operator's path or drifting? |
 | 2026-04-19 | `GPT_PRO_DAY2_5_UNEXPECTED.md` | Direction dead, volatility surfaces — snooping? |
 | 2026-04-18 | `GPT_PRO_M4_FALSIFICATION_COMPLETE.md` | M1-M4 all failed — pivot direction |
 | 2026-04-17 | `GPT_PRO_BASELINE1_V2.md` | Median-spot leak — edge was artifact |

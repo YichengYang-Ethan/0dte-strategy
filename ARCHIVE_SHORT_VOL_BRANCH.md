@@ -8,7 +8,7 @@ An exploratory research branch that surfaced during the intraday MVP work
 and produced a statistically significant finding on **intraday realized
 variance compression conditional on dealer-state proxy**
 (`atm_gex_skew`). This is a real, leak-safe finding — but it is
-**structurally unrelated** to the Joey 0DTE bot reconstruction that
+**structurally unrelated** to the the reference operator 0DTE bot reconstruction that
 drives the main branch.
 
 ## Git references
@@ -53,19 +53,19 @@ drives the main branch.
 
 Per GPT Pro realignment verdict (2026-04-20):
 > "Archive it as a legitimate separate branch. Do not delete it. Do not
-> use it as evidence that the Joey rebuild is working. Do not mix its
-> thresholds/features into the Joey branch."
+> use it as evidence that the practitioner rebuild is working. Do not mix its
+> thresholds/features into the the reference operator branch."
 
 The finding is real. It is just not what the main research thread is
 trying to build. Keeping it archived avoids:
 1. Losing a genuine result.
-2. Contaminating the Joey reconstruction branch with short-vol
+2. Contaminating the practitioner reconstruction branch with short-vol
    artifacts.
 3. Self-deception of treating this as evidence for the active thesis.
 
 ## Why the short-vol finding is not the main path
 
-Joey's real bot (reconstructed from his WeChat transcript) is
+the reference operator's real bot (reconstructed from the field research transcript) is
 structurally different:
 - **Long gamma** (buy options), not short vol.
 - **Event/structure-triggered** entry, not fixed 15:00 decision.
@@ -77,7 +77,7 @@ structurally different:
   put-wall**, **ATM IV spike**, **net flow**, **bid/ask** — several of
   which were never built here.
 
-See `ARCHITECTURE_JOEY_REBUILD.md` at repo root for the active path.
+See `ARCHITECTURE_R0_REBUILD.md` at repo root for the active path.
 
 ## If you ever want to revive this branch
 

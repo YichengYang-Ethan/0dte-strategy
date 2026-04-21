@@ -273,7 +273,7 @@ def main() -> int:
     elif "INCOHERENT" in verdict:
         print("  → Neither pin nor momentum dominates on ≥55% of days. "
               "A1 rebuild would not have empirical support. "
-              "Prefer A2 (Joey-style signal engineering) or A3 (archive).")
+              "Prefer A2 (practitioner-style signal engineering) or A3 (archive).")
 
     return 0
 

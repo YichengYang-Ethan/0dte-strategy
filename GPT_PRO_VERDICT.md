@@ -54,7 +54,7 @@ Gamma dollars, theta bleed, vega sensitivity differ. Comparing trades across reg
 824 days ≈ handful of macro states. Option predictability often clusters around macro events — must stratify CPI/FOMC/NFP/OPEX/ex-div.
 
 ### 10. False discovery
-Already tried enough branches that "one more feature" is more likely to produce a story than an edge. Joey's 70% WR is a source of hypotheses, not evidence.
+Already tried enough branches that "one more feature" is more likely to produce a story than an edge. the reference operator's 70% WR is a source of hypotheses, not evidence.
 
 ## Prescribed 7-Day Plan
 
@@ -102,15 +102,15 @@ Already tried enough branches that "one more feature" is more likely to produce 
 
 ## Data Upgrade Note
 
-- Joey says massive ~$200/mo for realtime flow
+- the reference operator says massive ~$200/mo for realtime flow
 - Theta Options tiers: ~$80 Value, ~$160 Standard+ (GPT Pro correction)
 - **Cboe DataShop Open-Close** = real ground truth for signed buy/sell/open/close classification
 - Only upgrade **after** paper trade shows baseline edge is live-reproducible
 
-## Joey's MM-Pinning Thesis — Regime-Dependent Verdict
+## the reference operator's MM-Pinning Thesis — Regime-Dependent Verdict
 
-- Joey's thesis ("跟着 market maker 走,预判 MM 会推动股价到最赚钱点位") = classic SpotGamma / Barbon-Buraschi "Gamma Fragility" narrative
+- the reference operator's thesis ("跟着 market maker 走,预判 MM 会推动股价到最赚钱点位") = classic SpotGamma / Barbon-Buraschi "Gamma Fragility" narrative
 - **Adams 2024 SSRN 4881008**: MMs MATCH 0DTE flow, net gamma carry ≈ 0 — thesis mostly false post-2023
 - Consequence: v5's Y2023 failure (PF 0.75-0.91) may be exactly the "MMs match flow" regime where pinning breaks
 - Partial validity possible in specific regimes (choppy 2024-25), not universal
-- Joey's 70% WR self-report cannot resolve this — not statistical evidence
+- the reference operator's 70% WR self-report cannot resolve this — not statistical evidence

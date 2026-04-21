@@ -55,7 +55,7 @@ observable in this window on this data.
    NEG_GAMMA states; it's not "walls always pin."
 4. Adams 2024 Fed paper already warned dealer gamma carry is ~0
    (though our check3 partially counter-evidenced that).
-5. Joey's +300% winners on 3.3% of days (check0) are not a "wall
+5. the reference operator's +300% winners on 3.3% of days (check0) are not a "wall
    pin" story — they're a "spot moves a lot" story. Hitting a call
    OTM +300% requires spot to go UP, not stay pinned.
 
@@ -70,11 +70,11 @@ observable in this window on this data.
    11.14). Walls are typically 20-50 SPX points from spot. For walls
    to improve on spot, pin must overcome RV — unlikely over an hour
    when the strike is OTM.
-3. **T_disc implementation is simplified.** Per `ARCHITECTURE_JOEY_REBUILD.md`
+3. **T_disc implementation is simplified.** Per `ARCHITECTURE_R0_REBUILD.md`
    §1.2, T_disc should be weighted by `GEX × persistence`. Check2
    uses |GEX| only, no persistence window. Persistence is the whole
    reason walls "stick."
-4. **Joey's holding window is 10-60 min, not 85 min.** check0 showed
+4. **the reference operator's holding window is 10-60 min, not 85 min.** check0 showed
    +300% target reachable within 60 min on 3.3% of days. Walls
    may predict 60-min spot better than 85-min spot.
 5. **No `midwall` feasibility check.** The midwall candidate in T_disc
@@ -124,9 +124,9 @@ Three possible reconciliations:
    (walls as attractors). This would flip the entire formulation.
 
 Reconciliation (3) is the most parsimonious and aligns with
-Barbon-Buraschi 2021 + Adams 2024. It also explains why Joey's
+Barbon-Buraschi 2021 + Adams 2024. It also explains why the reference operator's
 winners cluster on high-movement days (check0 3.3% hit rate): in
-NEG_GAMMA, dealers accelerate moves away from spot; Joey's
+NEG_GAMMA, dealers accelerate moves away from spot; the reference operator's
 0.70Δ-call-in-NEG_GAMMA rule (v5) was accidentally capturing the
 momentum, not the pin.
 
@@ -144,7 +144,7 @@ branches:
   attractors. When spot approaches a wall in NEG_GAMMA, dealer
   hedging accelerates the move through/past the wall, not back to it.
 - This aligns with Barbon-Buraschi 2021 gamma-fragility and with
-  Joey's v5 rule surviving on NEG_GAMMA+pos<0.15 (spot near put wall →
+  the reference operator's v5 rule surviving on NEG_GAMMA+pos<0.15 (spot near put wall →
   bounce AWAY, which is what a long-call captures).
 - Next step: new test, "do wall-proximity events in NEG_GAMMA predict
   directional spot moves AWAY from the wall?"
@@ -157,7 +157,7 @@ branches:
 - Build an entry rule on raw features (GEX state, pos_in_range, flow
   sign, ATM IV, overnight gap, VIX) without trying to predict a
   specific target level.
-- This is essentially Joey's approach: confluence of features triggers
+- This is essentially the reference operator's approach: confluence of features triggers
   entry into 0.20Δ OTM calls/puts; exit at −40% stop or EOD.
 - Closer to what actually makes money (based on check0's 3.3% hit
   rate + V2's +378% median winner).
@@ -193,7 +193,7 @@ intraday.
 
 **Revised pivot ranking (post-check2c):**
 
-1. **A2 (Joey-style feature engineering, strict OOS)** — most defensible.
+1. **A2 (practitioner-style feature engineering, strict OOS)** — most defensible.
 2. **A3 (archive + writeup)** — most honest if we think A2 is dressed-up
    overfitting.
 3. **A1 (momentum-not-pin rebuild)** — demoted. No empirical support
@@ -207,21 +207,21 @@ adjudication.
 
 ## What we keep regardless
 
-- V2 empirical finding (Joey +378% real, −40% stop correct)
+- V2 empirical finding (the reference operator +378% real, −40% stop correct)
 - V3 (open-filter no microstructure support)
 - V4 (§5 weak-trend free alpha falsified)
 - check0 (payoff geometry feasible at 3.3% 60min / 9.7% full-day)
 - check3 (dealer-sign stable across VIX, PASS)
-- `docs/joey_bot_extracted_specs.md` (intel)
-- `docs/joey_payoff_model.py` (V2-calibrated)
-- `docs/strategy_delta_vs_joey.md` (§1/§3/§4 softened, §5 falsified)
+- `docs/peer_bot_extracted_specs.md` (intel)
+- `docs/peer_payoff_model.py` (V2-calibrated)
+- `docs/strategy_delta_vs_peer.md` (§1/§3/§4 softened, §5 falsified)
 
 All of the above remain valid whether we kill R0 or rescue it. No
 rollback needed on this front.
 
 ## What we revert if R0 dies
 
-- `ARCHITECTURE_JOEY_REBUILD.md` (entire file) — archive
+- `ARCHITECTURE_R0_REBUILD.md` (entire file) — archive
 - HANDOFF.md Actions 2-7 — superseded by pivot plan
 - `src/pipeline/intraday_features.py` — already short-vol artifact,
   either archive or repurpose depending on pivot
@@ -233,7 +233,7 @@ rollback needed on this front.
   at `docs/gpt_pro_brief_2026_04_21_round7.md`.
 - Paste brief + 3 attached files to GPT Pro, get pivot guidance.
 - Decision on A1 / A2 / A3 by 10:00 CT.
-- Then: either implement new research plan (A1), or write Joey-style
+- Then: either implement new research plan (A1), or write practitioner-style
   signal engineering plan (A2), or write project wrap-up (A3).
 
 ## One-paragraph summary for GPT Pro (UPDATED)
@@ -246,6 +246,6 @@ rollback needed on this front.
 > to beat spot-as-target. Mechanism failure, not measurement. Dealer
 > short-gamma exists; pin does not. R0 target-prediction thesis is
 > dead. Options: (A1) revise to momentum-not-pin (Barbon-Buraschi
-> gamma fragility); (A2) abandon target formula, do Joey-style feature
+> gamma fragility); (A2) abandon target formula, do practitioner-style feature
 > engineering; (A3) archive project. Which pivot is most defensible
 > given the reconciled evidence?

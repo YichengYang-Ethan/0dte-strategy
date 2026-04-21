@@ -1,6 +1,6 @@
 """V3: Empirical support for the 09:30-09:45 no-trade filter.
 
-Joey intel #17: "no signals in first 15 min after open".
+reference-operator intel #17: "no signals in first 15 min after open".
 
 If the 09:30-09:45 window is empirically noisier than 09:45-10:00+ (in
 terms of price / spread / wall-level instability), the rule is sound and
@@ -20,7 +20,7 @@ Procedure:
 
 Kill: if A-window variance is NOT materially higher than C-window, our
 09:45 filter is uninformed. Not a kill for the whole project — just
-demotes Joey intel #17 from "validated" to "matches our guess, no
+demotes reference-operator intel #17 from "validated" to "matches our guess, no
 empirical support."
 
 Diagnostic only. No signal code touched.

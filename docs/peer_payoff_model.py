@@ -1,18 +1,18 @@
 """
-Joey's 0DTE bot payoff model — reference baseline.
+the reference operator's 0DTE bot payoff model — reference baseline.
 
-Encodes the 18 data points extracted from WeChat 2026-04-20
-(see docs/joey_bot_extracted_specs.md), CROSS-VALIDATED with V2
+Encodes the 18 parameter observations extracted from Field research 2026-04-20
+(see docs/peer_bot_extracted_specs.md), CROSS-VALIDATED with V2
 empirical test 2026-04-21 on 951 trading days of 0.20Δ SPXW 0DTE
 call data. See docs/validation_summary_2026_04_21.md for the full
 audit.
 
 V2 findings that shaped this model:
-  - Joey's +300% typical win is REAL: unconditional median win at
+  - the reference operator's +300% typical win is REAL: unconditional median win at
     -40% stop is +378% on the 952-day SPXW 0DTE dataset.
-  - Joey's -40% stop is mathematically CORRECT: PF 1.28 vs 0.97
+  - the reference operator's -40% stop is mathematically CORRECT: PF 1.28 vs 0.97
     without stop (+32% PF improvement). Not overfit.
-  - Joey's 70% WR is IMPOSSIBLE with +300%/-40% payoff — that would
+  - the reference operator's 70% WR is IMPOSSIBLE with +300%/-40% payoff — that would
     imply PF 17.5, which no 0DTE strategy achieves live. Realistic
     signal-conditional WR is 25-35%.
 
@@ -36,7 +36,7 @@ Side = Literal["win", "loss"]
 
 
 @dataclass(frozen=True)
-class JoeyPayoffModel:
+class the reference operatorPayoffModel:
     # --- Sizing (data point #2) ---
     kelly_fraction: float = 0.25                # 1/4 Kelly
     equity_fraction_max: float = 1.00           # he sizes "by position percentage"
@@ -59,11 +59,11 @@ class JoeyPayoffModel:
 
     # --- Payoff: win rate by regime (primary regime effect) ---
     # Unconditional WR at -40% stop = 9.7% (V2 finding)
-    # Signal gating shifts this upward. Joey's self-report (70%) is
+    # Signal gating shifts this upward. the reference operator's self-report (70%) is
     # mathematically impossible with this payoff — real range is 25-35%.
     win_rate_by_regime: dict[Regime, float] = field(default_factory=lambda: {
         "strong_trend": 0.35,   # estimated top-quartile signal gating
-        "squeeze":      0.40,   # Joey's best regime ("咔咔好几单")
+        "squeeze":      0.40,   # the reference operator's best regime ("咔咔好几单")
         "chop":         0.25,   # modest gating effect
         "weak_trend":   0.12,   # minimal signal value; near-baseline
         "event_day":    0.30,   # ambiguous — could be high or low
@@ -88,12 +88,12 @@ class JoeyPayoffModel:
     holding_minutes_range: tuple[int, int] = (10, 60)
 
     # --- Risk (data point #9) ---
-    daily_loss_cap: float | None = None          # Joey has none
-    kill_switch: None = None                     # Joey has none
+    daily_loss_cap: float | None = None          # the reference operator has none
+    kill_switch: None = None                     # the reference operator has none
 
     # --- Session (data point #17) ---
     no_trade_minutes_after_open: int = 15
-    # V3 update: Joey's rule has NO microstructure support. Option-level
+    # V3 update: the reference operator's rule has NO microstructure support. Option-level
     # spread/vol in first 15 min matches core session. His rule may be
     # about GEX-primitive stability, not option quote stability.
 
@@ -155,8 +155,8 @@ class JoeyPayoffModel:
         deliver to reach desired_wr in the given holding window.
 
         Examples:
-          JOEY.signal_lift_required(0.20, "60min") → 6.06x
-          JOEY.signal_lift_required(0.30, "full_day") → 3.09x
+          R0.signal_lift_required(0.20, "60min") → 6.06x
+          R0.signal_lift_required(0.30, "full_day") → 3.09x
 
         Use this as the quantitative R1-R5 bar: if our current primitives
         cannot lift the unconditional 3.3% / 9.7% baseline by at least
@@ -172,47 +172,47 @@ class JoeyPayoffModel:
 # The benchmark: this is what our R3-R5 system has to beat.
 # ---------------------------------------------------------------------------
 
-JOEY = JoeyPayoffModel()
+R0 = the reference operatorPayoffModel()
 
 
 def summary_table() -> str:
     """Summary showing BE WR (regime-independent) and regime PF."""
     lines = [
         f"Break-even WR (regime-independent): "
-        f"{JOEY.break_even_win_rate() * 100:.1f}%",
-        f"Net win:  +{JOEY.net_payoff_pct('win') * 100:.1f}%",
-        f"Net loss: {JOEY.net_payoff_pct('loss') * 100:.1f}%",
-        f"Unconditional WR (V2): {JOEY.unconditional_win_rate * 100:.1f}%",
+        f"{R0.break_even_win_rate() * 100:.1f}%",
+        f"Net win:  +{R0.net_payoff_pct('win') * 100:.1f}%",
+        f"Net loss: {R0.net_payoff_pct('loss') * 100:.1f}%",
+        f"Unconditional WR (V2): {R0.unconditional_win_rate * 100:.1f}%",
         "",
         f"{'Regime':<15} {'Assumed WR':>10} {'Expected PF':>12} {'EV %':>8}",
         "-" * 48,
     ]
     for regime in ("strong_trend", "squeeze", "chop", "weak_trend", "event_day"):
-        wr = JOEY.win_rate_by_regime[regime]
-        pf = JOEY.profit_factor(regime)
-        ev = JOEY.expected_value_per_trade(regime) * 100
+        wr = R0.win_rate_by_regime[regime]
+        pf = R0.profit_factor(regime)
+        ev = R0.expected_value_per_trade(regime) * 100
         pf_str = f"{pf:.2f}" if pf != float("inf") else "inf"
         lines.append(f"{regime:<15} {wr*100:>9.0f}% {pf_str:>12} {ev:>7.1f}%")
     return "\n".join(lines)
 
 
 if __name__ == "__main__":
-    print("Joey 0DTE bot — reference payoff (V2-calibrated 2026-04-21)")
+    print("the reference operator 0DTE bot — reference payoff (V2-calibrated 2026-04-21)")
     print()
     print(summary_table())
     print()
     print("V2 empirical baseline on 951 days of unconditional 0.20Δ calls:")
-    print(f"  WR = {JOEY.unconditional_win_rate*100:.1f}%  PF = 1.28  "
+    print(f"  WR = {R0.unconditional_win_rate*100:.1f}%  PF = 1.28  "
           f"median_win = +378%  median_loss = -40%")
     print()
-    print("Joey's 70% self-reported WR is mathematically impossible with")
+    print("the reference operator's 70% self-reported WR is mathematically impossible with")
     print(f"  +378%/-40% payoff (would imply PF = 17.5). Realistic signal-")
     print(f"  conditional WR is 25-40% depending on regime.")
     print()
-    print("Kill-switch question:  Joey has none. Our R3 must add "
+    print("Kill-switch question:  the reference operator has none. Our R3 must add "
           "adaptive-Kelly downgrade.")
-    print("No-fill question:      Joey undefined. Our R3 must add exit "
+    print("No-fill question:      the reference operator undefined. Our R3 must add exit "
           "state machine with timeout + market fallback.")
     print("Weak-trend question:   V4 FALSIFIED the 30-min open-range "
           "prospective classifier (precision 34% < 55%). Regime gating "
-          "is harder than claimed in strategy_delta_vs_joey.md §5.")
+          "is harder than claimed in strategy_delta_vs_peer.md §5.")

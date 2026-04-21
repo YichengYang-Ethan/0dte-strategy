@@ -42,9 +42,9 @@ EOD snapshot data used to predict mechanisms that are fundamentally intraday (de
 - `GPT_PRO_REVIEW_REQUEST.md`: initial brief (rejected OI-delta proxy, ranked variants A/B/C)
 - `GPT_PRO_VERDICT.md`: Round 1 verdict (instrument > feature problem, 10 blind spots)
 - `GPT_PRO_FOLLOWUP.md`: instrument sanity check results
-- `GPT_PRO_ROUND3.md`: 12 new facts from Joey's full chat history + 3 paths
+- `GPT_PRO_ROUND3.md`: 12 new facts from the reference operator's full chat history + 3 paths
 
-Round 3 recommended D: ship Path A + start intraday recorder. User overruled: logic of 0DTE (MM-active-push + 0DTE gamma explosion + no overnight risk) is cleaner than 1DTE, and the friend's (Joey's) framework is coherent enough to warrant direct engineering rather than parallel validation.
+Round 3 recommended D: ship Path A + start intraday recorder. User overruled: logic of 0DTE (MM-active-push + 0DTE gamma explosion + no overnight risk) is cleaner than 1DTE, and the friend's (the reference operator's) framework is coherent enough to warrant direct engineering rather than parallel validation.
 
 ## Artifacts preserved for potential future reference
 
