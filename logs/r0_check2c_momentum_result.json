@@ -1,0 +1,26 @@
+{
+  "n_days_total": 952,
+  "n_days_qualifying": 150,
+  "pre_registered_criterion": "hit rate >55% for a thesis to count",
+  "near_put_wall": {
+    "name": "near_put_wall",
+    "n": 147,
+    "pin_hit_rate": 0.49,
+    "momentum_hit_rate": 0.497,
+    "mean_ret_pct_85min": 0.018,
+    "median_ret_pct_85min": 0.0,
+    "directional_strength_pct": 0.018,
+    "thesis_signed": "pin"
+  },
+  "near_call_wall": {
+    "name": "near_call_wall",
+    "n": 3,
+    "pin_hit_rate": 0.667,
+    "momentum_hit_rate": 0.333,
+    "mean_ret_pct_85min": -0.041,
+    "median_ret_pct_85min": -0.032,
+    "directional_strength_pct": 0.041,
+    "thesis_signed": "pin"
+  },
+  "verdict": "PIN_PARTIAL (one side only)"
+}

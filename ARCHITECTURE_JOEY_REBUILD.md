@@ -39,10 +39,39 @@ For each minute-bar t, produce:
   persistence, expiry-sliced vanna concentration, and flow
   corroboration
 
-### 1.2 Target formula family (3 candidates, one chosen by R3 gate)
+### 1.2 Target formula family (4 candidates, one chosen by R3 gate)
 
-All three are pure geometric/structural combinations — **no OLS, no
+> **AMENDED 2026-04-21 per Ultra Review Action 1 + V4 empirical finding.**
+> Added **T_disc** (discrete argmax) as primary candidate. Demoted T2
+> barycenter to robustness variant. Reason: Joey's transcript cites
+> integer pin levels (7175, 7126, 7125), not continuous barycenters.
+> A weighted average of two walls produces a number like 7163.4 that
+> Joey's bot would never output — his bot outputs integer strikes
+> because dealer gamma concentrates there, not at interpolated points.
+>
+> **V4 constraint (2026-04-21):** any target that depends on a regime
+> classifier must first pass a V4-style prospective identification test
+> (precision ≥ 0.55, recall ≥ 0.40 at t=10:00 ET using only pre-10:00
+> data). V4 already falsified one such classifier (30-min open-range
+> z-score → weak-trend label). Promoting T_disc to R3 requires similar
+> prospective viability evidence for the walls-as-pin-levels hypothesis.
+
+All four are pure geometric/structural combinations — **no OLS, no
 learned coefficients**. Only integer weights with pre-declared signs.
+
+**T_disc — Discrete argmax target (new primary candidate):**
+```
+T_t = argmax over candidate strikes S ∈ {call_wall, put_wall, midwall,
+                                          persistent_wall_30m}
+      of (GEX_total(S) * persistence(S))
+where
+  midwall = strike at minimum of sum_side GEX curvature between walls
+  persistent_wall_30m = strike held as argmax in ≥60% of last 30 minutes
+```
+**Rationale:** Joey's bot outputs integer pin levels (7175, 7126) per
+transcript. This matches the mechanism: dealer gamma concentrates at
+option strikes, not between them. A continuous barycenter (T2) averages
+away the discrete mass structure.
 
 **T1 — Dominant-wall target:**
 ```
@@ -50,7 +79,7 @@ T_t = spot-closer of {call_wall, put_wall}
       where "wall" = argmax_strike (|GEX_side(strike)|)
 ```
 
-**T2 — Weighted-wall target (primary candidate):**
+**T2 — Weighted-wall target (robustness variant, demoted from primary):**
 ```
 T_t = (w_c * CW + w_p * PW) / (w_c + w_p)
 where
@@ -59,6 +88,9 @@ where
   thickness_side = peak_GEX_side / total_GEX_side
   persistence_side = # minutes in last 30 where argmax stayed at that strike / 30
 ```
+**Kept as comparison point:** if T_disc wins MAE against T2, we have
+evidence for the discrete-pin hypothesis. If T2 wins, the mechanism is
+more distributed than Joey describes and we should honestly report it.
 
 **T3 — Flow-adjusted weighted target:**
 ```
@@ -66,15 +98,22 @@ T_t = T2 + α * sign(net_flow_10m) * |net_flow_z|_clipped
 where α is an integer in {1, 2, 3} (grid search), |.|_clipped to 3σ
 ```
 
-All three produce a point estimate in SPX points. Band [L_t, U_t] is
+All four produce a point estimate in SPX points. Band [L_t, U_t] is
 defined uniformly as ±0.5 × ATM_straddle_price from the target.
 
-### 1.3 Selection between T1/T2/T3
+### 1.3 Selection between T_disc / T1 / T2 / T3
 
-R3 kill gate (see §6.1) runs all three on untouched last-year data. One
-target formula is chosen if and only if it clears the kill gate. If
-more than one clears, pick the lowest-MAE one and report the others in
-the final writeup.
+R3 kill gate (see §6.1) runs all four on untouched last-year data via
+`scripts/r0_check2_dumb_mae.py`. One target formula is chosen if and
+only if it clears the kill gate AND beats spot-as-target by ≥10% MAE
+reduction (per HANDOFF Action 4 / Ultra Review #3). If more than one
+clears, pick the lowest-MAE one and report the others in the final
+writeup.
+
+**Additional prospective viability requirement (V4-derived):** the
+winning target must separate post-entry outcomes prospectively at
+10:00 ET. We will not adopt a target formula that only works in
+retrospective labeling.
 
 ---
 

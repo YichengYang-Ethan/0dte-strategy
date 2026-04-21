@@ -1,0 +1,49 @@
+{
+  "n_days": 952,
+  "vix_tercile_cutoffs": {
+    "low_high_bound": 0.187,
+    "mid_high_bound": 0.2738
+  },
+  "per_tercile": {
+    "high": {
+      "n_days": 317,
+      "signed_call_vol_mean": 9109.19,
+      "signed_put_vol_mean": 12996.8,
+      "iv_median": 0.35
+    },
+    "low": {
+      "n_days": 317,
+      "signed_call_vol_mean": 13559.86,
+      "signed_put_vol_mean": 15071.51,
+      "iv_median": 0.16
+    },
+    "mid": {
+      "n_days": 318,
+      "signed_call_vol_mean": 11527.5,
+      "signed_put_vol_mean": 17444.65,
+      "iv_median": 0.22
+    }
+  },
+  "call_flow_test": {
+    "signs": {
+      "high": 1,
+      "low": 1,
+      "mid": 1
+    },
+    "stable": true,
+    "mag_ratio": 1.49,
+    "verdict": "PASS (stable, magnitude ratio 1.49x < 2x)"
+  },
+  "put_flow_test": {
+    "signs": {
+      "high": 1,
+      "low": 1,
+      "mid": 1
+    },
+    "stable": true,
+    "mag_ratio": 1.34,
+    "verdict": "PASS (stable, magnitude ratio 1.34x < 2x)"
+  },
+  "overall_verdict": "PASS",
+  "kill_triggered": false
+}

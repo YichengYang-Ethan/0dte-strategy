@@ -1,6 +1,21 @@
 # Handoff — Current State and Next Actions
 
-**Last updated:** 2026-04-20 (session handoff before Claude account switch)
+**Last updated:** 2026-04-21 08:30 CT — **PROJECT ARCHIVED**
+
+## ⚠️ ARCHIVE NOTICE (2026-04-21)
+
+The R0 thesis was empirically falsified on 952 days of SPXW 0DTE
+data. A2 pilot rescue attempt also failed. Per pre-registered GPT Pro
+Round 7 commitment, the project is archived. **No further R1–R5
+development. No A2 expansion. No A1 rebuild.**
+
+**Start here:** `docs/R0_RIP_2026_04_21.md` — terminal research artifact.
+Then `docs/validation_summary_2026_04_21.md` — full empirical trail.
+
+The sections below reflect the research state as of 2026-04-20 before
+the archive decision. Preserved for historical context.
+
+---
 
 This document is the **single source of truth** for anyone picking up
 this project. Read this first. Then read `README.md` for the full
@@ -120,44 +135,82 @@ entirely. Do not pivot to a "lighter Joey" or revive short-vol.
 
 ## This Week — Numbered Actions
 
+0. **DONE 2026-04-20 evening**: Reverse-engineered Joey's live 0DTE bot
+   from WeChat (10 screenshots, 18 data points). Outputs:
+   - `docs/joey_bot_extracted_specs.md` — source of truth for Joey's
+     system parameters (sizing, fill, stops, costs, frequency,
+     regime behavior, architectural gaps).
+   - `docs/joey_payoff_model.py` — executable baseline. Run directly
+     to print break-even WR by regime. **Weak-trend BE WR = 58.3%.**
+   - `docs/strategy_delta_vs_joey.md` — five concrete optimization
+     points with file paths, pseudocode, and intel-number rationale.
+
+   **Benchmarking rule going forward:** R1–R5 validation must report
+   performance by regime bucket, and the bar for success on weak-trend
+   days is "better than no-trade," not "better than Joey's PnL" —
+   because Joey likely loses money on weak-trend days himself. Systematic
+   weak-trend no-trade gate is the single largest free engineering win
+   this intel exposed. See `strategy_delta_vs_joey.md` §5.
+
 1. **Today**: Rewrite `ARCHITECTURE_JOEY_REBUILD.md` §1.2 to add
    T_disc as the fourth target candidate, demoting T2 barycenter to
    robustness. Single commit before any code.
 
-2. **Tomorrow**: Write `scripts/r0_check1_trigger_density.py`. For
-   each of ~950 trading days, compute all 5 trigger primitives at
-   minute resolution on existing data. Report per-trigger firing
-   rate, 5-trigger confluence-score distribution, and number of days
-   producing ≥1 entry candidate with confluence ≥3.
+**Ordering reorganized 2026-04-21 per GPT Pro Q3 verdict**: check0
+(payoff geometry) inserted before existing checks; remaining checks
+reordered to check3→check2→check1 because dealer sign is load-bearing
+mechanism, trigger density is tuning. Original Action numbers preserved
+below for traceability.
 
-3. **Day 3**: Write `scripts/r0_check2_dumb_mae.py`. At t=14:30 on
-   last-year data (untouched by any prior work), compute T_disc, T2,
-   and spot-as-target. Report MAE vs actual 15:55 close.
+2. **Day 2 (was Day 2)**: `scripts/r0_check0_payoff_geometry.py` —
+   **NEW, GPT Pro 2026-04-21 recommendation**. Pure pathwise feasibility
+   check. On 952 days of existing 0DTE data, measure whether Joey's
+   claimed payoff (+300% gross before −40% stop within 10-60 min hold)
+   is mechanically reachable at all. Written and running. Kill if target
+   hit rate <3% of days, or >80% concentrated in top-3-months. V2
+   already partly addressed this with +378% median win on full-day hold;
+   check0 tests the shorter 10-60 min window specifically.
 
-4. **Day 4**: Write `scripts/r0_check3_dealer_sign.py`. Using
-   `compute_day_flow_leak_safe` across all ~950 days, test whether
-   customer net call-side and put-side are systematically long or
-   short, broken out by VIX regime.
+3. **Day 3 (reordered — was Action 4)**: `scripts/r0_check3_dealer_sign.py`.
+   Using `compute_day_flow_leak_safe` across all ~950 days, test whether
+   customer net call-side and put-side are systematically long or short,
+   broken out by VIX regime. Per HANDOFF §9: dealer sign flips features
+   and targets, cannot be deferred.
 
-5. **Day 5 — Decision point**: If checks 1-3 all pass, amend R0
+4. **Day 4 (reordered — was Action 3)**: `scripts/r0_check2_dumb_mae.py`.
+   At t=14:30 on last-year data (untouched), compute T_disc, T2, and
+   spot-as-target. Report MAE vs actual 15:55 close.
+
+5. **Day 5 (reordered — was Action 2)**: `scripts/r0_check1_trigger_density.py`.
+   Per-trigger firing rate, confluence-score distribution, number of
+   days producing ≥1 entry candidate with confluence ≥3. Per GPT Pro
+   Q2.4: Joey's 3-5/day is a sanity bound, NOT a tuning target.
+   Validation requires future-only utility (check2 MAE or post-entry
+   expectancy) to improve monotonically as threshold moves; if only
+   trade count changes, cargo cult.
+
+6. **Day 6 — Decision point**: If checks 0/1/2/3 all pass, amend R0
    §1, §2, §6, §7, §9 in a single commit with a `CHANGELOG.md`
    entry dated before R1 starts. If any fail, write a post-mortem
    and stop. Do not revive the short-vol branch. Do not pivot to a
    lighter Joey.
 
-6. **Do NOT touch R1-R5 code** until checks 1-3 all pass.
+7. **Do NOT touch R1-R5 code** until checks 0/1/2/3 all pass.
 
 ---
 
 ## Critical files to read (in order)
 
 1. `README.md` — full project timeline, falsification history
-2. `ARCHITECTURE_JOEY_REBUILD.md` — R0 pre-registration (NEEDS AMENDMENTS per #1-#5 above)
-3. `ARCHIVE_SHORT_VOL_BRANCH.md` — why short-vol is archived
-4. `GPT_PRO_REALIGN_JOEY_PATH.md` — most recent external review brief
-5. `logs/intraday_day3_report.md` — direction falsification numbers
-6. `logs/day2_5_diagnostics.md` — where volatility signal surfaced
-7. `src/pipeline/leak_safe.py` — leak-safe primitives (reusable)
+2. `docs/joey_bot_extracted_specs.md` — Joey's system reverse-engineered (Action 0 output)
+3. `docs/strategy_delta_vs_joey.md` — five optimization points, prioritized
+4. `docs/joey_payoff_model.py` — runnable reference baseline
+5. `ARCHITECTURE_JOEY_REBUILD.md` — R0 pre-registration (NEEDS AMENDMENTS per #1-#5 above)
+6. `ARCHIVE_SHORT_VOL_BRANCH.md` — why short-vol is archived
+7. `GPT_PRO_REALIGN_JOEY_PATH.md` — most recent external review brief
+8. `logs/intraday_day3_report.md` — direction falsification numbers
+9. `logs/day2_5_diagnostics.md` — where volatility signal surfaced
+10. `src/pipeline/leak_safe.py` — leak-safe primitives (reusable)
 
 ---
 

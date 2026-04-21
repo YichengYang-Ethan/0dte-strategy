@@ -1,0 +1,17 @@
+{
+  "days_usable": 951,
+  "ret_std": {
+    "A_0930_0945_median": 0.081914,
+    "B_0945_1000_median": 0.073895,
+    "C_1000_1500_median": 0.080492,
+    "A_over_C_ratio": 1.02,
+    "B_over_C_ratio": 0.92
+  },
+  "spread_pct": {
+    "A_0930_0945_median": 0.0167,
+    "B_0945_1000_median": 0.0154,
+    "C_1000_1500_median": 0.0223,
+    "A_over_C_ratio": 0.75
+  },
+  "verdict": "NOT_SUPPORTED \u2014 09:30-09:45 is not materially noisier than the core session"
+}
